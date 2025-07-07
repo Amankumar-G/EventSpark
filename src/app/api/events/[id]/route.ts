@@ -37,6 +37,29 @@ const streamUpload = (file: File, folder: string): Promise<string> => {
   });
 };
 
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    await connect();
+
+    const {id} =await params;
+    if (!id) {
+      return NextResponse.json({ success: false, error: "Missing event ID" }, { status: 400 });
+    }
+
+    const event = await Event.findOne({ slug: id });
+
+    if (!event) {
+      return NextResponse.json({ success: false, error: "Event not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, event }, { status: 200 });
+
+  } catch (error) {
+    console.error("Error fetching event:", error);
+    return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
+  }
+}
+
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     await connect();

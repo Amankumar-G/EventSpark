@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useFetchOrganizerEvents } from '@/hooks/useFetchOrganizerEvents'
 import { CalendarDays, MapPin, Ticket } from 'lucide-react'
-import { CreateEventModal } from '@/components/CreateEventModal'
+import { CreateEventModal } from '@/features/events/components/CreateEvent'
 import { EventWithDetails } from '@/types/globals'
 // Updated type definition
 

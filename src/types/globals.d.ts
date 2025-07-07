@@ -44,6 +44,7 @@ export interface EventWithDetails {
     price: number
     isActive?: boolean
     sold?: number
+    _id?: string | { toString(): string }
   }>
   isPublic?: boolean
   status: 'active' | 'pending' | 'draft' | 'cancelled'

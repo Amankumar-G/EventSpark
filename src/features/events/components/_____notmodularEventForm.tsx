@@ -36,7 +36,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 // Updated type definitions
 interface EventWithDetails {
   _id: string | { toString(): string }
@@ -48,6 +47,7 @@ interface EventWithDetails {
   location: {
     type: string
     address: string
+    onlneUrl? : string
   }
   ticketTypes: Array<{
     name: string

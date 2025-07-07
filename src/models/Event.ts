@@ -5,6 +5,7 @@ export interface ITicketType {
   name: string;
   price: number;
   isActive: boolean;
+  sold : number;
 }
 
 export interface IEventLocation {
@@ -15,6 +16,7 @@ export interface IEventLocation {
 
 
 export interface IEvent extends Document {
+  _id : string | { toString(): string };
   title: string;
   slug: string;
   description: string;
@@ -36,7 +38,8 @@ export interface IEvent extends Document {
 const TicketTypeSchema = new Schema<ITicketType>({
   name: { type: String, required: true, trim: true },
   price: { type: Number, required: true, min: 0 },
-  isActive: { type: Boolean, default: true }
+  isActive: { type: Boolean, default: true },
+  sold : {type : Number, required : true, default:0}
 });
 
 const EventLocationSchema = new Schema<IEventLocation>({
