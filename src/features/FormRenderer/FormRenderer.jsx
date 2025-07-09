@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const PREFIX = 'formalute';
 
-const FormRenderer = ({ jsonConfig, onSubmit, action = "#", method = "POST" ,id = "Event"}) => {
+const FormRenderer = ({ jsonConfig, onSubmit, action = "#", method = "POST"}) => {
   const [errors, setErrors] = useState({});
   const parsedConfig = useMemo(() => {
     try {
@@ -254,14 +254,14 @@ const FormRenderer = ({ jsonConfig, onSubmit, action = "#", method = "POST" ,id 
       initial="hidden"
       animate="visible"
       variants={pageFadeIn}
-      className="bg-gradient-to-b  min-h-screen py-12 px-4 sm:px-6 lg:px-8"
+      className="bg-gradient-to-b  min-h-screen pb-12 px-4 sm:px-6 lg:px-8"
     > 
       <motion.div variants={sectionSlideIn} className="max-w-5xl mx-auto">
 
         <Card className="border-0 shadow-sm rounded-2xl overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-[#468FAF]/10 to-[#FF6B6B]/10">
             <CardTitle className="text-2xl font-bold text-gray-800">
-              Registration Form for {id}
+              Registration Form
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">

@@ -18,7 +18,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useFetchOrganizerEvents } from "@/hooks/useFetchOrganizerEvents";
 import { CalendarDays, MapPin, Ticket } from "lucide-react";
 import { CreateEventModal } from "@/features/events/components/CreateEvent";
+import AttendeeModal from "@/features/events/components/AttendeeModal";
 import { EventWithDetails, TicketType } from "@/features/events/types/event";
+import { useState } from "react";
 // Updated type definition
 
 const fadeIn = {
@@ -219,6 +221,7 @@ function EventsTable({
   events: EventWithDetails[];
   onEventUpdate: () => void;
 }) {
+  const [openModalEventId, setOpenModalEventId] = useState<string | null>(null);
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
@@ -317,6 +320,20 @@ function EventsTable({
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/events/${event.slug}`}>View</Link>
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setOpenModalEventId(event._id.toString())}
+              >
+                View Attendee List
+              </Button>
+              {openModalEventId && (
+                <AttendeeModal
+                  eventId={openModalEventId}
+                  open={!!openModalEventId}
+                  onClose={() => setOpenModalEventId(null)}
+                />
+              )}
             </TableCell>
           </TableRow>
         ))}

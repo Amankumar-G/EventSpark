@@ -1,137 +1,11 @@
-/**
- * @swagger
- * /api/events/{id}:
- *   get:
- *     summary: Get event by ID
- *     tags:
- *       - Events
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: The MongoDB ObjectId or slug of the event
- *     responses:
- *       200:
- *         description: Successfully retrieved event
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 event:
- *                   $ref: '#/components/schemas/Event'
- *       400:
- *         description: Missing or invalid ID
- *       404:
- *         description: Event not found
- *       500:
- *         description: Internal server error
- *
- *   put:
- *     summary: Update an event by ID
- *     tags:
- *       - Events
- *     consumes:
- *       - multipart/form-data
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Event ID (MongoDB ObjectId)
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               slug:
- *                 type: string
- *               description:
- *                 type: string
- *               startDate:
- *                 type: string
- *                 format: date-time
- *               endDate:
- *                 type: string
- *                 format: date-time
- *               location:
- *                 type: string
- *                 description: JSON stringified object
- *               ticketTypes:
- *                 type: string
- *                 description: JSON stringified array of ticket types
- *               isPublic:
- *                 type: string
- *                 enum: [true, false]
- *               formConfig:
- *                 type: string
- *                 description: JSON stringified object
- *               banner:
- *                 type: string
- *                 format: binary
- *               brochure:
- *                 type: string
- *                 format: binary
- *               speakers:
- *                 type: array
- *                 items:
- *                   type: string
- *                   format: binary
- *     responses:
- *       200:
- *         description: Successfully updated event
- *       400:
- *         description: Invalid input or ID
- *       404:
- *         description: Event not found
- *       500:
- *         description: Server error during update
- *
- *   delete:
- *     summary: Delete an event by ID
- *     tags:
- *       - Events
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Event ID (MongoDB ObjectId)
- *     responses:
- *       200:
- *         description: Event deleted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *       400:
- *         description: Invalid ID
- *       404:
- *         description: Event not found
- *       500:
- *         description: Server error during deletion
- */
 
 import {connect} from '@/dbConfig/dbConfig';
 import Event from '@/models/Event';
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import { v2 as cloudinary } from 'cloudinary';
+import { auth } from '@clerk/nextjs/server'
+import { IEvent } from "@/models/Event";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
@@ -156,22 +30,31 @@ const streamUpload = (file: File, folder: string): Promise<string> => {
   });
 };
 
+
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     await connect();
-
-    const {id} =await params;
+    
+    const { userId: clearId } = await auth();
+    const { id } =await params;
+    console.log("hitted")
     if (!id) {
       return NextResponse.json({ success: false, error: "Missing event ID" }, { status: 400 });
     }
 
-    const event = await Event.findOne({ slug: id });
+    const event = await Event.findOne({ slug: id }).lean<IEvent>();// Use lean() to get plain object
 
     if (!event) {
       return NextResponse.json({ success: false, error: "Event not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, event }, { status: 200 });
+    // Check if current user is in the attendee list
+    const isRegistered = event.attendees?.some((attendee: any) => attendee.attendeeId === clearId);
+
+    // Add `registered: true/false` flag
+    const responseEvent = { ...event, registered: isRegistered || false };
+
+    return NextResponse.json({ success: true, event: responseEvent }, { status: 200 });
 
   } catch (error) {
     console.error("Error fetching event:", error);
@@ -182,7 +65,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     await connect();
-    const { id } =  await params;
+    const { id } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ success: false, error: 'Invalid ID' }, { status: 400 });
@@ -190,56 +73,73 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     const formData = await req.formData();
 
-    const title = formData.get("title") as string;
-    const slug = formData.get("slug") as string;
-    const description = formData.get("description") as string;
-    const startDate = formData.get("startDate") as string;
-    const endDate = formData.get("endDate") as string;
-    const location = JSON.parse(formData.get("location") as string);
-    const ticketTypes = JSON.parse(formData.get("ticketTypes") as string);
-    const isPublic = formData.get("isPublic") === "true";
-    const formConfigRaw = formData.get('formConfig') as string;
-    const formConfig = formConfigRaw ? JSON.parse(formConfigRaw) : null;
-    let bannerUrl: string | undefined;
-    let brochureUrl: string | undefined;
-    let speakerUrls: string[] = [];
+    const updatePayload: any = {};
 
+    const title = formData.get("title");
+    if (title) updatePayload.title = title;
+
+    const slug = formData.get("slug");
+    if (slug) updatePayload.slug = slug;
+
+    const description = formData.get("description");
+    if (description) updatePayload.description = description;
+
+    const startDate = formData.get("startDate");
+    if (startDate) updatePayload.startDate = startDate;
+
+    const endDate = formData.get("endDate");
+    if (endDate) updatePayload.endDate = endDate;
+
+    const locationRaw = formData.get("location");
+    if (locationRaw && locationRaw !== "undefined") {
+      try {
+        updatePayload.location = JSON.parse(locationRaw as string);
+      } catch (err) {
+        return NextResponse.json({ success: false, error: "Invalid JSON in location" }, { status: 400 });
+      }
+    }
+
+    const ticketTypesRaw = formData.get("ticketTypes");
+    if (ticketTypesRaw && ticketTypesRaw !== "undefined") {
+      try {
+        updatePayload.ticketTypes = JSON.parse(ticketTypesRaw as string);
+      } catch (err) {
+        return NextResponse.json({ success: false, error: "Invalid JSON in ticketTypes" }, { status: 400 });
+      }
+    }
+
+    const isPublicRaw = formData.get("isPublic");
+    if (isPublicRaw !== null) updatePayload.isPublic = isPublicRaw === "true";
+
+    const formConfigRaw = formData.get("formConfig");
+    if (formConfigRaw && formConfigRaw !== "undefined") {
+      try {
+        updatePayload.formConfig = JSON.parse(formConfigRaw as string);
+      } catch (err) {
+        return NextResponse.json({ success: false, error: "Invalid JSON in formConfig" }, { status: 400 });
+      }
+    }
+
+    // Handle file uploads only if provided
     const banner = formData.get("banner") as File | null;
+    if (banner && banner.name) {
+      updatePayload.bannerUrl = await streamUpload(banner, "event_banners");
+    }
+
     const brochure = formData.get("brochure") as File | null;
+    if (brochure && brochure.name) {
+      updatePayload.brochureUrl = await streamUpload(brochure, "event_brochures");
+    }
+
     const speakers = formData.getAll("speakers") as File[];
-
-    if (banner) {
-      bannerUrl = await streamUpload(banner, "event_banners");
-    }
-
-    if (brochure) {
-      brochureUrl = await streamUpload(brochure, "event_brochures");
-    }
-
-    if (speakers.length > 0) {
-      speakerUrls = await Promise.all(
-        speakers.map((speaker, i) => streamUpload(speaker, "event_speakers"))
+    if (speakers && speakers.length > 0) {
+      const uploaded = await Promise.all(
+        speakers.map((speaker) => streamUpload(speaker, "event_speakers"))
       );
+      updatePayload.speakerImages = uploaded;
     }
 
-    const updated = await Event.findByIdAndUpdate(
-      id,
-      {
-        title,
-        slug,
-        description,
-        startDate,
-        endDate,
-        location,
-        ticketTypes,
-        formConfig,
-        isPublic,
-        ...(bannerUrl && { bannerUrl }),
-        ...(brochureUrl && { brochureUrl }),
-        ...(speakerUrls.length > 0 && { speakerImages: speakerUrls }),
-      },
-      { new: true }
-    );
+    const updated = await Event.findByIdAndUpdate(id, updatePayload, { new: true });
 
     if (!updated) {
       return NextResponse.json({ success: false, error: 'Event not found' }, { status: 404 });

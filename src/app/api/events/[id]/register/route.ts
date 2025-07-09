@@ -11,8 +11,8 @@ export async function PUT(
   try {
     await connect();
 
-    const { id } = await params; // ✅ no need for `await` here
-    const { userId } = await auth(); // ✅ no need to await `auth()`; it returns synchronously
+    const { id } =await params;
+    const { userId } =await auth();
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -25,11 +25,20 @@ export async function PUT(
       );
     }
 
-    const body = await req.json(); // ✅ still needed
-    
+    const body = await req.json();
+    const { ticketTypeIndex, ...formData } = body;
+
+    if (typeof ticketTypeIndex !== "number") {
+      return NextResponse.json(
+        { error: "Missing or invalid ticketTypeIndex" },
+        { status: 400 }
+      );
+    }
+
+    // Check if already registered
     const alreadyRegistered = await Event.findOne({
       _id: id,
-      "attendees.attendeeId": userId, // Clerk user ID is a string
+      "attendees.attendeeId": userId,
     });
 
     if (alreadyRegistered) {
@@ -39,27 +48,44 @@ export async function PUT(
       );
     }
 
-    const registered = await Event.findByIdAndUpdate(
+    // Check ticket index validity
+    const eventDoc = await Event.findById(id);
+    if (!eventDoc) {
+      return NextResponse.json(
+        { error: "Event not found" },
+        { status: 404 }
+      );
+    }
+
+    if (
+      !Array.isArray(eventDoc.ticketTypes) ||
+      ticketTypeIndex < 0 ||
+      ticketTypeIndex >= eventDoc.ticketTypes.length
+    ) {
+      return NextResponse.json(
+        { error: "Invalid ticket type index" },
+        { status: 400 }
+      );
+    }
+
+    // Perform both attendee push and ticket sold increment in a single update
+    const updatedEvent = await Event.findByIdAndUpdate(
       id,
       {
         $push: {
           attendees: {
-            attendeeId: userId, // ✅ just use the string
-            data: body,
+            attendeeId: userId,
+            data: formData,
           },
+        },
+        $inc: {
+          [`ticketTypes.${ticketTypeIndex}.sold`]: 1,
         },
       },
       { new: true }
     );
 
-    if (!registered) {
-      return NextResponse.json(
-        { success: false, error: "Event not found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, event: registered });
+    return NextResponse.json({ success: true, event: updatedEvent });
   } catch (error: any) {
     console.error("PUT /api/events/[id] error:", error);
     return NextResponse.json(

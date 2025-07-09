@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,6 +23,7 @@ import {
   Clock,
   Tag,
   Users,
+  CheckCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -118,7 +120,20 @@ export default function SingleEventPage() {
   const [event, setEvent] = useState<EventWithDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const isSuccess = searchParams.get("success") === "true";
+  const [registered, setRegistered] = useState<Boolean>(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
+  useEffect(() => {
+    if (isSuccess) {
+      setShowSuccess(true);
+
+      // Auto-dismiss after 5s (optional)
+      const timer = setTimeout(() => setShowSuccess(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccess]);
   useEffect(() => {
     const fetchEvent = async () => {
       setIsLoading(true);
@@ -126,6 +141,7 @@ export default function SingleEventPage() {
       try {
         const response = await axios.get(`/api/events/${id}`);
         setEvent(response.data.event);
+        setRegistered(response.data.event.registered);
       } catch (err) {
         console.error("Error fetching event details:", err);
         setError("Failed to load event details. Please try again.");
@@ -252,6 +268,15 @@ export default function SingleEventPage() {
       className="bg-gradient-to-b from-gray-50 to-white min-h-screen"
     >
       {/* Floating Header */}
+      {showSuccess && (
+        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-green-100 border border-green-300 text-green-700 px-6 py-4 rounded-xl shadow-md z-50 animate-slide-down">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-5 h-5" />
+            <span>🎉 Registration successful!</span>
+          </div>
+        </div>
+      )}
+
       <motion.header
         variants={sectionSlideIn}
         className="z-50 bg-white/90 backdrop-blur-sm py-4 px-4 sm:px-6 shadow-sm"
@@ -270,12 +295,18 @@ export default function SingleEventPage() {
             {title}
           </h1>
           <div className="flex items-center">
-            <Badge
-              variant="outline"
-              className="border-[#468FAF] text-[#468FAF]"
-            >
-              {category || "Event"}
-            </Badge>
+            {registered ? (
+              <Badge className="bg-green-100 text-green-700 border border-green-400 ml-4">
+                You're Registered
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className="border-[#468FAF] text-[#468FAF]"
+              >
+                {category || "Event"}
+              </Badge>
+            )}
           </div>
         </div>
       </motion.header>
@@ -634,23 +665,28 @@ export default function SingleEventPage() {
                     )}
                   </div>
 
-                  <motion.div whileHover={buttonHover}>
+                  {registered ? (
                     <Button
-                      type="button"
+                      disabled
                       variant="outline"
-                      className="w-full bg-gradient-to-r from-[#FF6B6B] to-[#e55f5f] hover:from-[#e55f5f] hover:to-[#FF6B6B] text-white py-6 text-lg rounded-xl font-bold"
-                      size="lg"
-                      onClick={() =>
-                        window.open(
-                          `${id}/register`,
-                          "_blank",
-                          "noopener=false"
-                        )
-                      }
+                      className="w-full bg-gray-100 text-gray-500 py-6 text-lg rounded-xl font-bold cursor-not-allowed"
                     >
-                      Register Now
+                      Already Registered
                     </Button>
-                  </motion.div>
+                  ) : (
+                    <motion.div whileHover={buttonHover}>
+                      <Link href={`${id}/register`} passHref>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full bg-gradient-to-r from-[#FF6B6B] to-[#e55f5f] hover:from-[#e55f5f] hover:to-[#FF6B6B] text-white py-6 text-lg rounded-xl font-bold"
+                          size="lg"
+                        >
+                          Register Now
+                        </Button>
+                      </Link>
+                    </motion.div>
+                  )}
                 </CardContent>
               </Card>
             </motion.section>
@@ -659,33 +695,35 @@ export default function SingleEventPage() {
       </main>
 
       {/* Footer CTA */}
-      <motion.section
-        variants={sectionSlideIn}
-        className="bg-gradient-to-r from-[#468FAF] to-[#FF6B6B] py-16"
-      >
-        <div className="container mx-auto max-w-5xl px-4 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Ready to Join This Event?
-          </h2>
-          <p className="text-white/90 max-w-2xl mx-auto mb-8">
-            Register now to secure your spot and be part of this amazing
-            experience.
-          </p>
-          <motion.div whileHover={buttonHover}>
-            <Button
-              type="button"
-              variant="outline"
-              className="bg-white text-[#FF6B6B] hover:bg-white/90 px-8 py-6 text-lg font-bold rounded-xl"
-              size="lg"
-              onClick={() =>
-                window.open(`${id}/register`, "_blank", "noopener=false")
-              }
-            >
-              Register Now
-            </Button>
-          </motion.div>
-        </div>
-      </motion.section>
+      {!registered && (
+        <motion.section
+          variants={sectionSlideIn}
+          className="bg-gradient-to-r from-[#468FAF] to-[#FF6B6B] py-16"
+        >
+          <div className="container mx-auto max-w-5xl px-4 text-center">
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Ready to Join This Event?
+            </h2>
+            <p className="text-white/90 max-w-2xl mx-auto mb-8">
+              Register now to secure your spot and be part of this amazing
+              experience.
+            </p>
+            <motion.div whileHover={buttonHover}>
+              <Button
+                type="button"
+                variant="outline"
+                className="bg-white text-[#FF6B6B] hover:bg-white/90 px-8 py-6 text-lg font-bold rounded-xl"
+                size="lg"
+                onClick={() =>
+                  window.open(`${id}/register`, "_blank", "noopener=false")
+                }
+              >
+                Register Now
+              </Button>
+            </motion.div>
+          </div>
+        </motion.section>
+      )}
     </motion.div>
   );
 }
