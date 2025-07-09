@@ -48,6 +48,7 @@ const RegisterPage = () => {
   const [eventName, setEventName] = useState("");
   const [eventId, setEventId] = useState("");
   const [clientSecret, setClientSecret] = useState("");
+  const [eventSlug, setEventSlug] = useState("");
   const [formData, setFormData] = useState<any>(null);
   const [ticketTypes, setTicketTypes] = useState<any[]>([]);
   const [selectedTicketType, setSelectedTicketType] = useState<number | null>(
@@ -65,6 +66,7 @@ const RegisterPage = () => {
         const event = data.event;
         setEventName(event.title);
         setEventId(event._id);
+        setEventSlug(event.slug)
 
         // Filter only active tickets
         const activeTickets = (event.ticketTypes || []).filter(
@@ -300,7 +302,7 @@ const RegisterPage = () => {
             <div className="space-y-8">
               {clientSecret ? (
                 <Elements stripe={stripePromise} options={{ clientSecret }}>
-                  <PaymentForm eventId={eventId} formData={formData} selectedTicketType={selectedTicketType}  />
+                  <PaymentForm eventId={eventId} formData={formData} selectedTicketType={selectedTicketType} eventSlug={eventSlug} />
                 </Elements>
               ) : (
                 <Card className="border-0 shadow-sm rounded-xl overflow-hidden h-full flex items-center justify-center">
@@ -329,9 +331,10 @@ interface PaymentFormProps {
   eventId: string;
   formData: any;
   selectedTicketType: number | null;
+  eventSlug:string;
 }
 
-const PaymentForm: React.FC<PaymentFormProps> = ({ eventId, formData, selectedTicketType }) => {
+const PaymentForm: React.FC<PaymentFormProps> = ({ eventId, formData, selectedTicketType ,eventSlug}) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isLoading, setIsLoading] = useState(false);
@@ -378,7 +381,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ eventId, formData, selectedTi
       });
 
       if (res.ok) {
-        window.location.href = `/events/${eventId}?success=true`;
+        window.location.href = `/events/${eventSlug}?success=true`;
         return;
       } else {
         const err = await res.json();

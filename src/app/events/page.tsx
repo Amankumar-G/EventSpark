@@ -82,6 +82,7 @@ export default function EventListingScreen() {
       try {
         // In a real app, this would be your actual API endpoint
         const response = await axios.get("/api/events");
+        console.log(response)
         setEvents(response.data.events);
         setFilteredEvents(response.data.events);
       } catch (err) {
@@ -263,14 +264,13 @@ export default function EventListingScreen() {
 
             <div className="relative max-w-2xl mx-auto bg-white rounded-xl shadow-sm p-4">
               <Search className="absolute left-4 top-1/2 ml-1 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-             <Input
+              <Input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search events by name, location, or category..."
                 className="pl-12 pr-4 py-5 text-base md:text-lg bg-white text-gray-800 rounded-xl placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-none border-none"
               />
-
 
               <Button
                 onClick={() => setShowFilters(!showFilters)}
@@ -286,11 +286,13 @@ export default function EventListingScreen() {
       {/* Filter Section */}
       {showFilters && (
         <div
-  className={cn(
-    "transition-all duration-500 ease-in-out overflow-hidden bg-white border-b shadow-sm",
-    showFilters ? "max-h-[1000px] opacity-100 py-6" : "max-h-0 opacity-0 py-0"
-  )}
->
+          className={cn(
+            "transition-all duration-500 ease-in-out overflow-hidden bg-white border-b shadow-sm",
+            showFilters
+              ? "max-h-[1000px] opacity-100 py-6"
+              : "max-h-0 opacity-0 py-0"
+          )}
+        >
           <div className="container mx-auto max-w-6xl px-4">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-2">
@@ -398,14 +400,10 @@ export default function EventListingScreen() {
                   {status.charAt(0).toUpperCase() + status.slice(1)}
                 </TabsTrigger>
               ))}
-            </TabsList> 
+            </TabsList>
           </div>
         </Tabs>
       </div>
-
-
-
-
 
       {/* Events Section */}
       <div className="container mx-auto max-w-6xl px-4 py-10">

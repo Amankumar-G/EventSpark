@@ -13,7 +13,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
   
-    const newStatus =  'active'; 
+    const newStatus =  'approved'; 
 
     const updated = await Event.findByIdAndUpdate(
       id,

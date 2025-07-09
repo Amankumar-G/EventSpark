@@ -1,29 +1,31 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { motion } from "framer-motion"
-import { Calendar } from "@/components/ui/calendar"
-import { useEffect, useState } from "react"
-
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { Calendar } from "@/components/ui/calendar";
+import { useEffect, useState } from "react";
 
 export function Hero() {
-  const [selectedDates, setSelectedDates] = useState([])
-  
-    useEffect(() => {
-      setSelectedDates([
-        new Date(2025, 6, 1),
-        new Date(2025, 6, 3),
-        new Date(2025, 6, 8),
-        new Date(2025, 6, 10),
-        new Date(2025, 6, 15),
-        new Date(2025, 6, 18),
-        new Date(2025, 6, 22),
-        new Date(2025, 6, 25),
-        new Date(2025, 6, 30),
-      ])
-  }, [])
+  const [hasMounted, setHasMounted] = useState(false);
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
 
-   if (!selectedDates) return null 
+  useEffect(() => {
+    setHasMounted(true);
+    setSelectedDates([
+      new Date(2025, 6, 1),
+      new Date(2025, 6, 3),
+      new Date(2025, 6, 8),
+      new Date(2025, 6, 10),
+      new Date(2025, 6, 15),
+      new Date(2025, 6, 18),
+      new Date(2025, 6, 22),
+      new Date(2025, 6, 25),
+      new Date(2025, 6, 30),
+    ]);
+  }, []);
+
+  if (!hasMounted) return null;
+
   return (
     <section className="container mx-auto py-20 px-4 grid gap-12 lg:grid-cols-2 items-center">
       <motion.div
@@ -56,10 +58,10 @@ export function Hero() {
       >
         <Calendar
           mode="multiple"
-           selected={selectedDates}
+          selected={selectedDates}
           className="rounded-md border shadow-md"
         />
       </motion.div>
     </section>
-  )
+  );
 }
