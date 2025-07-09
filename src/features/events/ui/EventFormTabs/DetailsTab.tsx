@@ -3,13 +3,24 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { FileText, MapPin, Upload, X } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-import { Controller, UseFormRegister, FieldErrors, Control, UseFormWatch, UseFormSetValue } from "react-hook-form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Controller,
+  UseFormRegister,
+  FieldErrors,
+  Control,
+  UseFormWatch,
+  UseFormSetValue,
+} from "react-hook-form";
 import { EventFormData } from "../../types/event";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 type Props = {
   control: Control<EventFormData>;
@@ -19,7 +30,13 @@ type Props = {
   setValue: UseFormSetValue<EventFormData>;
 };
 
-export default function DetailsTab({ control, register, errors, watch, setValue }: Props) {
+export default function DetailsTab({
+  control,
+  register,
+  errors,
+  watch,
+  setValue,
+}: Props) {
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const speakerInputRef = useRef<HTMLInputElement>(null);
   const brochureInputRef = useRef<HTMLInputElement>(null);
@@ -27,6 +44,21 @@ export default function DetailsTab({ control, register, errors, watch, setValue 
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [speakerPreviews, setSpeakerPreviews] = useState<string[]>([]);
   const [brochurePreview, setBrochurePreview] = useState<boolean>(false);
+  const [formBuilderConfig, setFormBuilderConfig] = useState<any | null>(null);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "FORMALUTE_FORM_CONFIG") {
+        setFormBuilderConfig(event.data.payload);
+
+        // ✅ You can also call setValue to include it in your form submission
+        setValue("formConfig", event.data.payload);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [setValue]);
 
   const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -64,26 +96,34 @@ export default function DetailsTab({ control, register, errors, watch, setValue 
       <div className="grid grid-cols-2 gap-6">
         {/* Start Date */}
         <div className="space-y-3">
-          <Label htmlFor="startDate">Start Date & Time <span className="text-red-500">*</span></Label>
+          <Label htmlFor="startDate">
+            Start Date & Time <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="startDate"
             type="datetime-local"
             {...register("startDate", { required: true })}
             className="focus-visible:ring-[#468FAF] h-11"
           />
-          {errors.startDate && <p className="text-sm text-red-500">Start date is required</p>}
+          {errors.startDate && (
+            <p className="text-sm text-red-500">Start date is required</p>
+          )}
         </div>
 
         {/* End Date */}
         <div className="space-y-3">
-          <Label htmlFor="endDate">End Date & Time <span className="text-red-500">*</span></Label>
+          <Label htmlFor="endDate">
+            End Date & Time <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="endDate"
             type="datetime-local"
             {...register("endDate", { required: true })}
             className="focus-visible:ring-[#468FAF] h-11"
           />
-          {errors.endDate && <p className="text-sm text-red-500">End date is required</p>}
+          {errors.endDate && (
+            <p className="text-sm text-red-500">End date is required</p>
+          )}
         </div>
       </div>
 
@@ -109,7 +149,9 @@ export default function DetailsTab({ control, register, errors, watch, setValue 
 
       {/* Location */}
       <div className="space-y-3">
-        <Label htmlFor="location">Location <span className="text-red-500">*</span></Label>
+        <Label htmlFor="location">
+          Location <span className="text-red-500">*</span>
+        </Label>
         <div className="relative">
           <Input
             id="location"
@@ -127,14 +169,29 @@ export default function DetailsTab({ control, register, errors, watch, setValue 
       {/* Banner Upload */}
       <div className="space-y-3">
         <Label>Banner Image</Label>
-        <input type="file" ref={bannerInputRef} onChange={handleBannerUpload} accept="image/*" className="hidden" />
+        <input
+          type="file"
+          ref={bannerInputRef}
+          onChange={handleBannerUpload}
+          accept="image/*"
+          className="hidden"
+        />
         <div className="flex items-center gap-4">
-          <Button type="button" variant="outline" onClick={() => bannerInputRef.current?.click()} className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => bannerInputRef.current?.click()}
+            className="flex items-center gap-2"
+          >
             <Upload className="h-4 w-4" /> Upload Banner
           </Button>
           {bannerPreview && (
             <div className="relative">
-              <img src={bannerPreview} alt="Banner preview" className="h-20 w-32 object-cover rounded-md" />
+              <img
+                src={bannerPreview}
+                alt="Banner preview"
+                className="h-20 w-32 object-cover rounded-md"
+              />
               <Button
                 type="button"
                 variant="ghost"
@@ -155,14 +212,30 @@ export default function DetailsTab({ control, register, errors, watch, setValue 
       {/* Speaker Upload */}
       <div className="space-y-3">
         <Label>Speaker Images</Label>
-        <input type="file" ref={speakerInputRef} onChange={handleSpeakerUpload} accept="image/*" multiple className="hidden" />
+        <input
+          type="file"
+          ref={speakerInputRef}
+          onChange={handleSpeakerUpload}
+          accept="image/*"
+          multiple
+          className="hidden"
+        />
         <div className="flex flex-wrap items-center gap-4">
-          <Button type="button" variant="outline" onClick={() => speakerInputRef.current?.click()} className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => speakerInputRef.current?.click()}
+            className="flex items-center gap-2"
+          >
             <Upload className="h-4 w-4" /> Upload Speakers
           </Button>
           {speakerPreviews.map((preview, index) => (
             <div key={index} className="relative">
-              <img src={preview} alt={`Speaker ${index + 1}`} className="h-20 w-20 object-cover rounded-md" />
+              <img
+                src={preview}
+                alt={`Speaker ${index + 1}`}
+                className="h-20 w-20 object-cover rounded-md"
+              />
               <Button
                 type="button"
                 variant="ghost"
@@ -180,9 +253,20 @@ export default function DetailsTab({ control, register, errors, watch, setValue 
       {/* Brochure Upload */}
       <div className="space-y-3">
         <Label>Brochure File</Label>
-        <input type="file" ref={brochureInputRef} onChange={handleBrochureUpload} accept=".pdf,.doc,.docx" className="hidden" />
+        <input
+          type="file"
+          ref={brochureInputRef}
+          onChange={handleBrochureUpload}
+          accept=".pdf,.doc,.docx"
+          className="hidden"
+        />
         <div className="flex items-center gap-4">
-          <Button type="button" variant="outline" onClick={() => brochureInputRef.current?.click()} className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => brochureInputRef.current?.click()}
+            className="flex items-center gap-2"
+          >
             <Upload className="h-4 w-4" /> Upload Brochure
           </Button>
           {brochurePreview && (
@@ -204,6 +288,49 @@ export default function DetailsTab({ control, register, errors, watch, setValue 
             </div>
           )}
         </div>
+      </div>
+      {/* Form Builder Button & Instructions */}
+      <div className="space-y-3">
+        <Label>Form Builder (Experimental)</Label>
+        <div className="flex items-center gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() =>
+              window.open("/formalute", "_blank", "noopener=false")
+            }
+          >
+            Open Form Builder
+          </Button>
+
+          {/* Show Clear Form button if config exists */}
+          {formBuilderConfig && (
+            <Button
+              type="button"
+              variant="ghost"
+              className="text-red-500"
+              onClick={() => {
+                setFormBuilderConfig(null);
+                setValue("formConfig", null);
+              }}
+            >
+              Clear Form
+            </Button>
+          )}
+        </div>
+
+        {/* Show confirmation if form config is present */}
+        {formBuilderConfig && (
+          <p className="text-sm text-green-600 font-medium">
+            ✅ Custom form added successfully!
+          </p>
+        )}
+
+        <p className="text-sm text-muted-foreground">
+          Select form fields for attendees to fill out, then click{" "}
+          <strong>Publish</strong> to confirm and save the form.
+        </p>
       </div>
     </>
   );

@@ -44,7 +44,7 @@ import {
 } from 'recharts';
 
 // Assuming you have this type defined in '@/types/globals'
-import { EventWithDetails } from '@/types/globals';
+import { EventWithDetails } from '@/features/events/types/event';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },

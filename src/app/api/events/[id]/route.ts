@@ -1,12 +1,131 @@
-// PUT /api/events/:id
-// DELETE /api/events/:id
-// Example update input:
-/*
-{
-  "title": "Updated Tech Meetup 2025",
-  "isPublic": false
-}
-*/
+/**
+ * @swagger
+ * /api/events/{id}:
+ *   get:
+ *     summary: Get event by ID
+ *     tags:
+ *       - Events
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The MongoDB ObjectId or slug of the event
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved event
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 event:
+ *                   $ref: '#/components/schemas/Event'
+ *       400:
+ *         description: Missing or invalid ID
+ *       404:
+ *         description: Event not found
+ *       500:
+ *         description: Internal server error
+ *
+ *   put:
+ *     summary: Update an event by ID
+ *     tags:
+ *       - Events
+ *     consumes:
+ *       - multipart/form-data
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Event ID (MongoDB ObjectId)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               slug:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               startDate:
+ *                 type: string
+ *                 format: date-time
+ *               endDate:
+ *                 type: string
+ *                 format: date-time
+ *               location:
+ *                 type: string
+ *                 description: JSON stringified object
+ *               ticketTypes:
+ *                 type: string
+ *                 description: JSON stringified array of ticket types
+ *               isPublic:
+ *                 type: string
+ *                 enum: [true, false]
+ *               formConfig:
+ *                 type: string
+ *                 description: JSON stringified object
+ *               banner:
+ *                 type: string
+ *                 format: binary
+ *               brochure:
+ *                 type: string
+ *                 format: binary
+ *               speakers:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       200:
+ *         description: Successfully updated event
+ *       400:
+ *         description: Invalid input or ID
+ *       404:
+ *         description: Event not found
+ *       500:
+ *         description: Server error during update
+ *
+ *   delete:
+ *     summary: Delete an event by ID
+ *     tags:
+ *       - Events
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Event ID (MongoDB ObjectId)
+ *     responses:
+ *       200:
+ *         description: Event deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid ID
+ *       404:
+ *         description: Event not found
+ *       500:
+ *         description: Server error during deletion
+ */
 
 import {connect} from '@/dbConfig/dbConfig';
 import Event from '@/models/Event';
@@ -79,8 +198,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const location = JSON.parse(formData.get("location") as string);
     const ticketTypes = JSON.parse(formData.get("ticketTypes") as string);
     const isPublic = formData.get("isPublic") === "true";
-
-    // Cloudinary uploads
+    const formConfigRaw = formData.get('formConfig') as string;
+    const formConfig = formConfigRaw ? JSON.parse(formConfigRaw) : null;
     let bannerUrl: string | undefined;
     let brochureUrl: string | undefined;
     let speakerUrls: string[] = [];
@@ -113,6 +232,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         endDate,
         location,
         ticketTypes,
+        formConfig,
         isPublic,
         ...(bannerUrl && { bannerUrl }),
         ...(brochureUrl && { brochureUrl }),

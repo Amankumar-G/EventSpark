@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { EventWithDetails, EventsApiResponse } from '@/types/globals'
+import { EventWithDetails, EventsApiResponse } from '@/features/events/types/event'
 
 export function useFetchOrganizerEvents(organizerId?: string) {
   const [events, setEvents] = useState<EventWithDetails[]>([])

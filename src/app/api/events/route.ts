@@ -1,3 +1,114 @@
+/**
+ * @swagger
+ * /api/events:
+ *   post:
+ *     summary: Create a new event
+ *     description: Organizer creates a new event with optional files and form configuration.
+ *     tags:
+ *       - Events
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - slug
+ *               - description
+ *               - startDate
+ *               - endDate
+ *               - location
+ *               - ticketTypes
+ *             properties:
+ *               title:
+ *                 type: string
+ *               slug:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               startDate:
+ *                 type: string
+ *                 format: date-time
+ *               endDate:
+ *                 type: string
+ *                 format: date-time
+ *               location:
+ *                 type: string
+ *                 description: JSON-stringified object
+ *               ticketTypes:
+ *                 type: string
+ *                 description: JSON-stringified array of ticket types
+ *               isPublic:
+ *                 type: string
+ *                 enum: [true, false]
+ *               formConfig:
+ *                 type: string
+ *                 description: JSON-stringified form field config
+ *               banner:
+ *                 type: string
+ *                 format: binary
+ *               brochure:
+ *                 type: string
+ *                 format: binary
+ *               speakers:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       201:
+ *         description: Event created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 event:
+ *                   $ref: '#/components/schemas/Event'
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ *
+ *   get:
+ *     summary: Get events based on user role
+ *     description: 
+ *       - Admin gets all events
+ *       - Organizer gets their own events
+ *       - Normal users get public and approved events only
+ *     tags:
+ *       - Events
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Events fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 events:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Event'
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/dbConfig/dbConfig'
 import Event from '@/models/Event'
@@ -33,7 +144,8 @@ export async function POST(req: NextRequest) {
     const location = formData.get('location') as string
     const ticketTypes = formData.get('ticketTypes') as string
     const isPublic = formData.get('isPublic') as string
-    
+    const formConfigRaw = formData.get('formConfig') as string;
+    const formConfig = formConfigRaw ? JSON.parse(formConfigRaw) : null;
     // Extract files
     const banner = formData.get('banner') as File | null
     const brochure = formData.get('brochure') as File | null
@@ -86,13 +198,13 @@ export async function POST(req: NextRequest) {
       location: JSON.parse(location),
       ticketTypes: JSON.parse(ticketTypes),
       isPublic: isPublic === "true",
+      formConfig,
       status: "pending",
       bannerUrl,
       brochureUrl,
       speakerImages: speakerUrls,
       organizer: user._id, // Use the MongoDB ObjectId, not Clerk userId
     }
-
     // Create and save the event
     const event = new Event(eventData)
     const savedEvent = await event.save()

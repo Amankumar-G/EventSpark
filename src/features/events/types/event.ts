@@ -13,8 +13,9 @@ export interface EventLocation {
 export type TicketType = {
   name: string;
   price: number;
-  isActive: boolean;
+  isActive?: boolean;
 };
+
 
 // Updated EventWithDetails interface
 export interface EventWithDetails {
@@ -28,7 +29,7 @@ export interface EventWithDetails {
   endDate: string | Date;
   location: EventLocation;
   // Use the defined TicketType for consistency, adding 'sold' as optional
-  ticketTypes: Array<TicketType & { sold?: number; _id?: string }>;
+  ticketTypes: Array<TicketType & { sold?: number; _id?: string | { toString(): string } }>;
   isPublic?: boolean; // Optional as per your update
   status: 'active' | 'pending' | 'draft' | 'cancelled';
   bannerUrl?: string; // Optional banner URL
@@ -58,7 +59,8 @@ export type EventFormData = {
   isPublic: boolean;
   bannerImage: File | null;
   brochureFile: File | null;
-  speakerImages: File[]; // Array of File objects for upload
+  speakerImages: File[]; 
+  formConfig?: any;
 };
 
 // Props for the Create/Edit Event Modal
@@ -67,3 +69,8 @@ export type CreateEventModalProps = {
   mode?: 'create' | 'edit'; // Specifies modal behavior
   onSuccess?: () => void; // Callback after successful operation
 };
+
+export type EventsApiResponse = {
+  success: boolean
+  events: EventWithDetails[]
+}

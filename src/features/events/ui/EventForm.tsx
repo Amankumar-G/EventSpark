@@ -9,26 +9,45 @@ import BasicInfoTab from "./EventFormTabs/BasicInfoTab";
 import DetailsTab from "./EventFormTabs/DetailsTab";
 import TicketsTab from "./EventFormTabs/TicketsTab";
 
+// Helper functions for randomness
+const getRandomTitle = () => `Event ${Math.floor(Math.random() * 1000)}`;
+const getRandomSlug = () => `event-${Math.random().toString(36).substring(2, 8)}`;
+const getRandomDescription = () =>
+  "This is a randomly generated event used for demonstration purposes.";
+const getRandomDate = (offsetDays: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() + offsetDays);
+  return date.toISOString().slice(0, 16); // 'YYYY-MM-DDTHH:mm'
+};
+const getRandomTicketTypes = () =>
+  Array.from({ length: Math.floor(Math.random() * 3) + 1 }, (_, i) => ({
+    name: `Ticket ${i + 1}`,
+    price: Math.floor(Math.random() * 100) + 10,
+    isActive: Math.random() > 0.3,
+  }));
+
+
 const convertEventToFormData = (event?: EventWithDetails): EventFormData => {
   if (!event) {
-    return {
+       return {
       _id: "",
-      title: "",
-      slug: "",
-      description: "",
-      startDate: "",
-      endDate: "",
+      title: getRandomTitle(),
+      slug: getRandomSlug(),
+      description: getRandomDescription(),
+      startDate: getRandomDate(1), // tomorrow
+      endDate: getRandomDate(3),   // 2 days after start
       location: {
-        type: "offline",
+        type: Math.random() > 0.5 ? "online" : "offline",
         address: "",
       },
-      ticketTypes: [],
-      isPublic: true,
+      ticketTypes: getRandomTicketTypes(),
+      isPublic: Math.random() > 0.5,
       bannerImage: null,
       brochureFile: null,
       speakerImages: [],
     };
   }
+
 
   const eventId = typeof event._id === "string" ? event._id : event._id.toString();
   const startDate = new Date(event.startDate).toISOString().slice(0, 16);
@@ -97,6 +116,7 @@ export function EventForm({ initialData, mode, onSuccess }: Props) {
     formData.append("location", JSON.stringify(data.location));
     formData.append("ticketTypes", JSON.stringify(data.ticketTypes));
     formData.append("isPublic", data.isPublic.toString());
+    formData.append("formConfig", JSON.stringify(data.formConfig));
 
     if (data.bannerImage) formData.append("banner", data.bannerImage);
     if (data.brochureFile) formData.append("brochure", data.brochureFile);

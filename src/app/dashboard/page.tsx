@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
-  const { isLoaded } = useRoleAuth(); // no requiredRole here
+  const { userRole, isLoaded } = useRoleAuth();
 
   if (!isLoaded) {
     return (
@@ -22,13 +22,24 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-100">
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <RoleGuard requiredRole="admin">
-            <AdminDashboard />
-          </RoleGuard>
-          <RoleGuard requiredRole="organizer">
-            <OrganizerDashboard />
-          </RoleGuard>
-          {/* etc */}
+          {userRole === "admin" && (
+            <RoleGuard requiredRole="admin">
+              <AdminDashboard />
+            </RoleGuard>
+          )}
+
+          {userRole === "organizer" && (
+            <RoleGuard requiredRole="organizer">
+              <OrganizerDashboard />
+            </RoleGuard>
+          )}
+
+          {/* Optional fallback if user has unsupported userRole */}
+          {userRole !== "admin" && userRole !== "organizer" && (
+            <div className="text-center text-gray-500">
+              Access denied. Insufficient permissions.
+            </div>
+          )}
         </div>
       </main>
     </div>

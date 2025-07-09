@@ -272,7 +272,6 @@ export function CreateEventModal({
       );
 
       const result = await res.json();
-      console.log("Event saved:", result);
 
       if (onSuccess) onSuccess();
       setOpen(false);

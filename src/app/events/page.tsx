@@ -1,119 +1,91 @@
-'use client';
+"use client";
 
-import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
-import Image from 'next/image';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { CalendarDays, MapPin, Search, Tag, XCircle, DollarSign, Filter, ChevronDown, Clock } from 'lucide-react';
-import { useEffect, useState, useMemo, useCallback } from 'react';
-import axios from 'axios';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'; // For advanced filtering
-import { cn } from '@/lib/utils'; // Assuming you have a utility for class names
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { EventWithDetails } from '@/features/events/types/event';
+import { motion } from "framer-motion";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  CalendarDays,
+  MapPin,
+  Filter,
+  Search,
+  X,
+  ArrowRight,
+} from "lucide-react";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { EventWithDetails } from "@/features/events/types/event";
 
-// --- Framer Motion Variants ---
-const pageVariants = {
+// Animation variants
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.5 } },
+};
+
+const slideUp = {
   hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-  },
-   transition: {
-      duration: 0.6,
-      ease: "easeOut",
-      when: "beforeChildren",
-      staggerChildren: 0.1,
-    },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 50, scale: 0.95 },
-  visible: { opacity: 1, y: 0, scale: 1},
-  transition: { duration: 0.5, ease: "easeOut" } ,
-  hover: { scale: 1.03, boxShadow: '0px 15px 40px rgba(0, 0, 0, 0.15)' },
-};
-
-const filterPanelVariants = {
-  hidden: { opacity: 0, x: -50 },
-  visible: { opacity: 1, x: 0},
-   transition: { duration: 0.5, ease: "easeOut" } 
-};
-
-const heroVariants = {
-  hidden: { opacity: 0, y: -20 },
-  visible: { opacity: 1, y: 0},
-  transition: { duration: 0.7, ease: "easeOut" } 
-};
-
-// --- Helper Functions ---
-const getCheapestTicketPrice = (ticketTypes: EventWithDetails['ticketTypes']) => {
-  if (!ticketTypes || ticketTypes.length === 0) return 'Free';
-  const activeTickets = ticketTypes.filter(t => t.isActive);
-  if (activeTickets.length === 0) return 'N/A';
-  const minPrice = Math.min(...activeTickets.map(t => t.price));
-  return minPrice === 0 ? 'Free' : `$${minPrice.toLocaleString()}`;
-};
-
-// Helper to determine event status based on current date
-const getEventStatus = (startDate: string | Date, endDate: string | Date, eventStatus: EventWithDetails['status']): EventWithDetails['status'] => {
-  if (eventStatus === 'cancelled') return 'cancelled';
-  const now = new Date();
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-
-  if (now < start) {
-    return 'active';
-  } else if (now >= start && now <= end) {
-    return 'active'; // Or 'live' if you have that status
-  } else {
-    return 'active';
-  }
+const stagger = {
+  visible: { transition: { staggerChildren: 0.1 } },
 };
 
 export default function EventListingScreen() {
-  const [allEvents, setAllEvents] = useState<EventWithDetails[]>([]);
+  const [events, setEvents] = useState<EventWithDetails[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<EventWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedStatus, setSelectedStatus] = useState<'all' | 'upcoming' | 'past' | 'cancelled'>('upcoming');
-  const [uniqueCategories, setUniqueCategories] = useState<string[]>([]);
-  const [openCategoryFilter, setOpenCategoryFilter] = useState(false);
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [locationTypeFilter, setLocationTypeFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
+  const [priceFilter, setPriceFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState("all");
 
+  // Filter visibility
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Fetch events
   useEffect(() => {
     const fetchEvents = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await axios.get('/api/events');
-        const fetchedEvents: EventWithDetails[] = response.data.events.map((event: any) => ({
-          ...event,
-          status: getEventStatus(event.startDate, event.endDate, event.status), // Dynamically determine status
-        }));
-        setAllEvents(fetchedEvents);
-
-        // Extract unique categories
-        const categories = Array.from(new Set(fetchedEvents.map(event => event.category)))
-          .filter((c): c is string => typeof c === 'string')
-          .sort();
-        if (typeof categories !== 'undefined') {
-            setUniqueCategories(categories);
-        } 
-
+        // In a real app, this would be your actual API endpoint
+        const response = await axios.get("/api/events");
+        setEvents(response.data.events);
+        setFilteredEvents(response.data.events);
       } catch (err) {
-        console.error('Error fetching events:', err);
+        console.error("Error fetching events:", err);
         setError(err as Error);
       } finally {
         setIsLoading(false);
@@ -123,343 +95,482 @@ export default function EventListingScreen() {
     fetchEvents();
   }, []);
 
-  const filteredEvents = useMemo(() => {
-    let currentEvents = [...allEvents];
+  // Apply filters
+  useEffect(() => {
+    let result = [...events];
 
-    // Filter by search term
+    // Apply search filter
     if (searchTerm) {
-      const lowercasedSearchTerm = searchTerm.toLowerCase();
-      currentEvents = currentEvents.filter(event =>
-        event.title.toLowerCase().includes(lowercasedSearchTerm) ||
-        event.description.toLowerCase().includes(lowercasedSearchTerm) ||
-        event.location.address.toLowerCase().includes(lowercasedSearchTerm) ||
-        (event.category && event.category.toLowerCase().includes(lowercasedSearchTerm)) ||
-        event.organizer.name?.toLowerCase().includes(lowercasedSearchTerm)
+      result = result.filter(
+        (event) =>
+          event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          event.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Filter by category
-    if (selectedCategory && selectedCategory !== 'all') {
-      currentEvents = currentEvents.filter(event => event.category === selectedCategory);
+    // Apply category filter
+    if (categoryFilter !== "all") {
+      result = result.filter((event) => event.category === categoryFilter);
     }
 
-    // Filter by date
-    if (selectedDate) {
-      currentEvents = currentEvents.filter(event => {
-        const eventDate = new Date(event.startDate);
-        return eventDate.toDateString() === selectedDate.toDateString();
+    // Apply location type filter
+    if (locationTypeFilter !== "all") {
+      result = result.filter(
+        (event) => event.location.type === locationTypeFilter
+      );
+    }
+
+    // Apply price filter
+    if (priceFilter !== "all") {
+      if (priceFilter === "free") {
+        result = result.filter((event) =>
+          event.ticketTypes.some(
+            (ticket) => ticket.price === 0 && ticket.isActive
+          )
+        );
+      } else if (priceFilter === "paid") {
+        result = result.filter((event) =>
+          event.ticketTypes.some(
+            (ticket) => ticket.price > 0 && ticket.isActive
+          )
+        );
+      } else if (priceFilter === "under-50") {
+        result = result.filter((event) =>
+          event.ticketTypes.some(
+            (ticket) =>
+              ticket.price > 0 && ticket.price <= 50 && ticket.isActive
+          )
+        );
+      }
+    }
+
+    // Apply date filter
+    if (dateFilter) {
+      const filterDate = new Date(dateFilter).setHours(0, 0, 0, 0);
+      result = result.filter((event) => {
+        const eventDate = new Date(event.startDate).setHours(0, 0, 0, 0);
+        return eventDate === filterDate;
       });
     }
 
-    // Filter by status
-    if (selectedStatus !== 'all') {
-      currentEvents = currentEvents.filter(event => event.status === selectedStatus);
+    // Apply status filter (tabs)
+    if (activeTab !== "all") {
+      result = result.filter((event) => event.status === activeTab);
     }
 
-    return currentEvents;
-  }, [allEvents, searchTerm, selectedCategory, selectedDate, selectedStatus]);
+    setFilteredEvents(result);
+  }, [
+    events,
+    searchTerm,
+    categoryFilter,
+    locationTypeFilter,
+    dateFilter,
+    priceFilter,
+    activeTab,
+  ]);
 
-  const handleClearFilters = useCallback(() => {
-    setSearchTerm('');
-    setSelectedCategory(null);
-    setSelectedDate(undefined);
-    setSelectedStatus('upcoming'); // Default to upcoming
-  }, []);
+  // Get cheapest ticket price
+  const getCheapestTicketPrice = (
+    ticketTypes: EventWithDetails["ticketTypes"]
+  ) => {
+    if (!ticketTypes || ticketTypes.length === 0) return "Free";
+    const activeTickets = ticketTypes.filter((t) => t.isActive);
+    if (activeTickets.length === 0) return "N/A";
+    const minPrice = Math.min(...activeTickets.map((t) => t.price));
+    return minPrice === 0 ? "Free" : `$${minPrice.toLocaleString()}`;
+  };
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  }, []);
+  // Format date
+  const formatDate = (dateString: string | Date) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm("");
+    setCategoryFilter("all");
+    setLocationTypeFilter("all");
+    setDateFilter(undefined);
+    setPriceFilter("all");
+  };
+
+  // Get unique categories
+  const uniqueCategories = Array.from(
+    new Set(events.map((event) => event.category || "Uncategorized"))
+  ).filter(Boolean);
 
   if (error) {
-    return <div className="text-red-600 p-8 text-center text-xl font-semibold">Error loading events: {error.message}. Please try refreshing the page.</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center p-8 max-w-md">
+          <div className="bg-gradient-to-r from-[#FF6B6B] to-[#468FAF] p-1 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="bg-white w-full h-full rounded-full flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-12 w-12 text-[#FF6B6B]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold mb-4 text-gray-800">
+            Error Loading Events
+          </h2>
+          <p className="text-gray-600 mb-6">
+            We couldn't load the events. Please try again later.
+          </p>
+          <Button
+            onClick={() => window.location.reload()}
+            className="bg-gradient-to-r from-[#468FAF] to-[#3a7a99] hover:from-[#3a7a99] hover:to-[#468FAF] text-white"
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={pageVariants}
-      className="bg-gradient-to-br from-gray-50 to-white min-h-screen py-12"
-    >
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section */}
-      <motion.div variants={heroVariants} className="text-center mb-16 px-4">
-        <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight mb-4">
-          Unleash Your Next Experience
-        </h1>
-        <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
-          Explore, discover, and join a vibrant community of events. Your next adventure awaits!
-        </p>
-      </motion.div>
+      <div className="bg-gradient-to-r from-[#468FAF] to-[#FF6B6B] text-white py-20 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={fadeIn}
+            className="text-center max-w-3xl mx-auto"
+          >
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              Discover Amazing Events
+            </h1>
+            <p className="text-lg md:text-2xl mb-8 text-gray-700 font-medium opacity-95">
+              Find your next experience among thousands of events happening
+              worldwide
+            </p>
 
-      <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Filter / Sidebar */}
-        <motion.aside variants={filterPanelVariants} className="lg:col-span-1 p-6 bg-white rounded-xl shadow-lg border border-gray-100 h-fit sticky top-28">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-            <Filter className="h-6 w-6 mr-3 text-[#f97316]" /> Filters
-          </h2>
+            <div className="relative max-w-2xl mx-auto bg-white rounded-xl shadow-sm p-4">
+              <Search className="absolute left-4 top-1/2 ml-1 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+             <Input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search events by name, location, or category..."
+                className="pl-12 pr-4 py-5 text-base md:text-lg bg-white text-gray-800 rounded-xl placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-none border-none"
+              />
 
-          <div className="space-y-6">
-            {/* Search Input */}
-            <div>
-              <Label htmlFor="search" className="mb-2 block text-md font-medium text-gray-700">Search Events</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input
-                  id="search"
-                  type="text"
-                  placeholder="Search by title, location..."
-                  className="pl-10 pr-4 py-2 rounded-lg border focus-visible:ring-offset-0 focus-visible:ring-[#f97316]/50"
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                />
-                {searchTerm && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
-                    onClick={() => setSearchTerm('')}
-                  >
-                    <XCircle className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
 
-            <Separator />
-
-            {/* Category Filter */}
-            <div>
-              <Label className="mb-2 block text-md font-medium text-gray-700">Category</Label>
-              <Popover open={openCategoryFilter} onOpenChange={setOpenCategoryFilter}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={openCategoryFilter}
-                    className="w-full justify-between px-4 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    {selectedCategory
-                      ? uniqueCategories.find((category) => category === selectedCategory) || "Select category..."
-                      : "Select category..."}
-                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                  <Command>
-                    <CommandInput placeholder="Search category..." className="h-9" />
-                    <CommandList>
-                      <CommandEmpty>No category found.</CommandEmpty>
-                      <CommandGroup>
-                        <CommandItem
-                          value="all"
-                          onSelect={() => {
-                            setSelectedCategory(null);
-                            setOpenCategoryFilter(false);
-                          }}
-                          className={cn("cursor-pointer", !selectedCategory && "bg-gray-100 font-semibold")}
-                        >
-                          All Categories
-                        </CommandItem>
-                        {uniqueCategories.map((category) => (
-                          <CommandItem
-                            key={category}
-                            value={category}
-                            onSelect={() => {
-                              setSelectedCategory(category);
-                              setOpenCategoryFilter(false);
-                            }}
-                            className={cn("cursor-pointer", selectedCategory === category && "bg-gray-100 font-semibold")}
-                          >
-                            {category}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <Separator />
-
-            {/* Date Filter */}
-            <div>
-              <Label className="mb-2 block text-md font-medium text-gray-700">Filter by Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal py-2.5 rounded-lg transition-colors",
-                      !selectedDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarDays className="mr-2 h-4 w-4" />
-                    {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    initialFocus
-                    className="[&_.rdp-caption_button]:text-[#f97316] [&_.rdp-day_--rdp-day-selected]:bg-[#f97316] [&_.rdp-day_--rdp-day-selected]:text-white"
-                  />
-                </PopoverContent>
-              </Popover>
-              {selectedDate && (
-                <Button
-                  variant="ghost"
-                  onClick={() => setSelectedDate(undefined)}
-                  className="mt-2 w-full text-sm text-red-500 hover:text-red-700 flex items-center justify-center gap-1"
-                >
-                  <XCircle className="h-4 w-4" /> Clear Date
-                </Button>
-              )}
-            </div>
-
-            <Separator />
-
-            {/* Status Filter (Radio Group) */}
-            <div>
-              <Label className="mb-3 block text-md font-medium text-gray-700">Event Status</Label>
-              <RadioGroup value={selectedStatus} onValueChange={(value: typeof selectedStatus) => setSelectedStatus(value)} className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="upcoming" id="status-upcoming" className="text-[#f97316]" />
-                  <Label htmlFor="status-upcoming" className="text-gray-700">Upcoming</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="past" id="status-past" className="text-[#f97316]" />
-                  <Label htmlFor="status-past" className="text-gray-700">Past</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="cancelled" id="status-cancelled" className="text-[#f97316]" />
-                  <Label htmlFor="status-cancelled" className="text-gray-700">Cancelled</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="all" id="status-all" className="text-[#f97316]" />
-                  <Label htmlFor="status-all" className="text-gray-700">All</Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            <Separator />
-
-            {/* Clear Filters Button */}
-            <Button
-              onClick={handleClearFilters}
-              className="w-full bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 transition-colors py-2.5 rounded-lg shadow-sm font-semibold"
-            >
-              <XCircle className="h-5 w-5 mr-2" /> Clear All Filters
-            </Button>
-          </div>
-        </motion.aside>
-
-        {/* Event Grid */}
-        <div className="lg:col-span-3">
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-              {[...Array(6)].map((_, i) => (
-                <Skeleton key={i} className="h-[380px] w-full rounded-xl" />
-              ))}
-            </div>
-          ) : filteredEvents.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-              className="text-center text-gray-600 py-20 px-4 bg-white rounded-xl shadow-lg flex flex-col items-center justify-center min-h-[400px]"
-            >
-              <Search className="h-20 w-20 text-gray-300 mb-6" />
-              <h3 className="text-2xl font-bold mb-3">No Events Found</h3>
-              <p className="text-lg mb-6">Your current filters or search query did not yield any results.</p>
               <Button
-                onClick={handleClearFilters}
-                className="bg-[#f97316] hover:bg-[#e06b12] text-white px-6 py-3 rounded-xl shadow-md transition-all transform hover:scale-105"
+                onClick={() => setShowFilters(!showFilters)}
+                className="mr-2 absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-100 text-gray-800 hover:bg-gray-200 rounded-lg px-4 py-2 shadow-none"
               >
-                Clear Filters
+                <Filter className="h-5 w-5 mr-2" /> Filters
               </Button>
-            </motion.div>
-          ) : (
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={{ visible: { transition: { staggerChildren: 0.08 } } }} // Quicker stagger for grid items
-              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8"
-            >
-              {filteredEvents.map(event => (
-                <motion.div key={typeof event._id === 'string' ? event._id : event._id.toString()} variants={cardVariants} whileHover="hover">
-                  <Link href={`/events/${event.slug}`} className="block h-full">
-                    <Card className="rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 h-full flex flex-col border border-gray-100 transform hover:-translate-y-1">
-                      <div className="relative w-full h-52 bg-gray-100 flex items-center justify-center">
-                        {event.bannerUrl ? (
-                          <Image
-                            src={event.bannerUrl}
-                            alt={event.title}
-                            layout="fill"
-                            objectFit="cover"
-                            className="object-center"
-                            priority={false} // Adjust priority based on your page structure
-                          />
-                        ) : (
-                          <div className="text-gray-400 text-base font-medium">No Image Available</div>
-                        )}
-                        <Badge
-                          className={cn(
-                            "absolute top-3 left-3 px-3 py-1 text-sm font-semibold rounded-full",
-                            event.status === 'active' && "bg-green-500 text-white",
-                            event.status === 'pending' && "bg-gray-500 text-white",
-                            event.status === 'cancelled' && "bg-red-500 text-white"
-                          )}
-                        >
-                          {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-                        </Badge>
-                      </div>
-                      <CardContent className="p-5 flex-grow flex flex-col justify-between">
-                        <div>
-                          <h3 className="text-2xl font-bold text-gray-900 leading-tight mb-2 line-clamp-2">
-                            {event.title}
-                          </h3>
-                          <Badge variant="secondary" className="mb-3 text-xs px-2 py-0.5 bg-blue-100 text-blue-800 font-medium">
-                            <Tag className="h-3 w-3 mr-1" /> {event.category}
-                          </Badge>
-                          <div className="flex items-center text-sm text-gray-600 mb-1">
-                            <CalendarDays className="h-4 w-4 mr-2 text-[#468FAF]" />
-                            <span>
-                              {new Date(event.startDate).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                              })}
-                              {new Date(event.startDate).toDateString() !== new Date(event.endDate).toDateString() &&
-                                ` - ${new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
-                            </span>
-                          </div>
-                          <div className="flex items-center text-sm text-gray-600 mb-3">
-                            <MapPin className="h-4 w-4 mr-2 text-[#FF6B6B]" />
-                            <span className="truncate">{event.location.address}</span>
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center pt-4 border-t border-gray-100 mt-auto">
-                          <span className="text-lg font-bold text-gray-900 flex items-center">
-                            <DollarSign className="h-5 w-5 mr-1 text-green-600" />
-                            {getCheapestTicketPrice(event.ticketTypes)}
-                          </span>
-                          <span className="text-sm text-gray-500 flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
-                            {new Date(event.startDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
+            </div>
+          </motion.div>
         </div>
       </div>
-    </motion.div>
+
+      {/* Filter Section */}
+      {showFilters && (
+        <div
+  className={cn(
+    "transition-all duration-500 ease-in-out overflow-hidden bg-white border-b shadow-sm",
+    showFilters ? "max-h-[1000px] opacity-100 py-6" : "max-h-0 opacity-0 py-0"
+  )}
+>
+          <div className="container mx-auto max-w-6xl px-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-gray-700">Filter by:</h3>
+                <Button
+                  onClick={clearFilters}
+                  variant="ghost"
+                  className="text-[#FF6B6B] hover:bg-[#FF6B6B]/10"
+                >
+                  <X className="h-4 w-4 mr-1" /> Clear all
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-4">
+                <Select
+                  value={categoryFilter}
+                  onValueChange={setCategoryFilter}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <span className="text-gray-500 mr-2">Category:</span>
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {uniqueCategories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={locationTypeFilter}
+                  onValueChange={setLocationTypeFilter}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <span className="text-gray-500 mr-2">Location:</span>
+                    <SelectValue placeholder="All Locations" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Locations</SelectItem>
+                    <SelectItem value="offline">In-person</SelectItem>
+                    <SelectItem value="online">Online</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={priceFilter} onValueChange={setPriceFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <span className="text-gray-500 mr-2">Price:</span>
+                    <SelectValue placeholder="All Prices" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Prices</SelectItem>
+                    <SelectItem value="free">Free Events</SelectItem>
+                    <SelectItem value="paid">Paid Events</SelectItem>
+                    <SelectItem value="under-50">Under $50</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[240px] justify-start text-left font-normal",
+                        !dateFilter && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarDays className="mr-2 h-4 w-4" />
+                      {dateFilter ? (
+                        format(dateFilter, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateFilter}
+                      onSelect={setDateFilter}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Status Tabs */}
+      <div className="container mx-auto max-w-6xl px-4 py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+          <div className="overflow-x-auto">
+            <TabsList className="inline-flex gap-4 bg-transparent w-full">
+              {["all", "active", "upcoming", "past"].map((status) => (
+                <TabsTrigger
+                  key={status}
+                  value={status}
+                  className="relative flex-1 pb-2 text-sm md:text-base text-gray-800 font-medium transition-colors
+                    after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-0
+                    after:bg-orange-500 after:transition-all after:duration-300
+                    data-[state=active]:after:w-full data-[state=active]:text-black"
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </TabsTrigger>
+              ))}
+            </TabsList> 
+          </div>
+        </Tabs>
+      </div>
+
+
+
+
+
+      {/* Events Section */}
+      <div className="container mx-auto max-w-6xl px-4 py-10">
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[...Array(6)].map((_, i) => (
+              <Card
+                key={i}
+                className="border-0 shadow-sm rounded-2xl overflow-hidden"
+              >
+                <Skeleton className="h-48 w-full" />
+                <CardContent className="p-6 space-y-4">
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-6 w-1/3" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : filteredEvents.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="bg-gradient-to-r from-[#468FAF] to-[#FF6B6B] p-1 w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center">
+              <div className="bg-white w-full h-full rounded-full flex items-center justify-center">
+                <svg
+                  className="h-12 w-12 text-[#468FAF]"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">
+              No events found
+            </h3>
+            <p className="text-gray-600 max-w-md mx-auto mb-6">
+              Try adjusting your search or filter criteria to find what you're
+              looking for.
+            </p>
+            <Button
+              onClick={clearFilters}
+              className="bg-gradient-to-r from-[#468FAF] to-[#3a7a99] hover:from-[#3a7a99] hover:to-[#468FAF] text-white"
+            >
+              Clear all filters
+            </Button>
+          </div>
+        ) : (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={stagger}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
+            {filteredEvents.map((event) => (
+              <motion.div key={String(event._id)} variants={slideUp}>
+                <Card className="border-0 shadow-sm rounded-2xl hover:shadow-md transition-shadow h-full flex flex-col">
+                  <div className="relative w-full h-48">
+                    {event.bannerUrl ? (
+                      <Image
+                        src={event.bannerUrl}
+                        alt={event.title}
+                        layout="fill"
+                        objectFit="cover"
+                        className="object-center"
+                      />
+                    ) : (
+                      <div className="bg-gradient-to-r from-[#468FAF] to-[#FF6B6B] w-full h-full flex items-center justify-center text-white text-lg font-semibold">
+                        {event.title}
+                      </div>
+                    )}
+                    <Badge className="absolute top-3 right-3 bg-white text-gray-800 shadow-sm">
+                      {event.status.charAt(0).toUpperCase() +
+                        event.status.slice(1)}
+                    </Badge>
+                  </div>
+
+                  <CardContent className="p-6 flex-grow flex flex-col">
+                    <CardHeader className="p-0 mb-4">
+                      <CardTitle className="text-xl font-bold text-gray-800 truncate">
+                        {event.title}
+                      </CardTitle>
+                      {event.category && (
+                        <CardDescription className="text-[#468FAF] font-medium">
+                          {event.category}
+                        </CardDescription>
+                      )}
+                    </CardHeader>
+
+                    <div className="space-y-3 mb-6">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <CalendarDays className="h-4 w-4 mr-2 text-[#468FAF]" />
+                        <span>{formatDate(event.startDate)}</span>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <MapPin className="h-4 w-4 mr-2 text-[#FF6B6B]" />
+                        <span className="truncate">
+                          {event.location.address}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-auto flex justify-between items-center">
+                      <Badge
+                        variant="outline"
+                        className={
+                          event.location.type === "offline"
+                            ? "border-[#468FAF] text-[#468FAF]"
+                            : "border-[#FF6B6B] text-[#FF6B6B]"
+                        }
+                      >
+                        {event.location.type === "offline"
+                          ? "In-person"
+                          : "Online"}
+                      </Badge>
+                      <span className="font-bold text-gray-800">
+                        {getCheapestTicketPrice(event.ticketTypes)}
+                      </span>
+                    </div>
+
+                    <Button
+                      asChild
+                      variant="ghost"
+                      className="mt-4 text-[#468FAF] hover:text-[#3a7a99] hover:bg-[#468FAF]/10 px-0"
+                    >
+                      <Link href={`/events/${event.slug}`}>
+                        View details <ArrowRight className="h-4 w-4 ml-2" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </div>
+
+      {/* CTA Section */}
+      {!isLoading && filteredEvents.length > 0 && (
+        <div className="container mx-auto max-w-6xl px-4 py-12">
+          <Card className="bg-gradient-to-r from-[#468FAF] to-[#FF6B6B] text-white border-0 rounded-2xl overflow-hidden">
+            <CardContent className="p-8 md:p-12 flex flex-col md:flex-row items-center justify-between">
+              <div className="mb-6 md:mb-0 md:mr-8">
+                <h3 className="text-2xl font-bold mb-2">
+                  Can’t find what you’re looking for?
+                </h3>
+                <p className="opacity-90 max-w-md">
+                  Create your own event and share it with thousands of potential
+                  attendees.
+                </p>
+              </div>
+              <Button className="bg-white text-[#FF6B6B] hover:bg-white/90 px-8 py-6 text-lg font-bold rounded-xl">
+                Create an Event
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
   );
 }
+``;

@@ -1,22 +1,21 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema } from "mongoose";
 import User from "./User";
 
 export interface ITicketType {
   name: string;
   price: number;
   isActive: boolean;
-  sold : number;
+  sold: number;
 }
 
 export interface IEventLocation {
-  type: 'online' | 'offline';
+  type: "online" | "offline";
   address?: string;
   onlineUrl?: string;
 }
 
-
 export interface IEvent extends Document {
-  _id : string | { toString(): string };
+  _id: string | { toString(): string };
   title: string;
   slug: string;
   description: string;
@@ -25,7 +24,12 @@ export interface IEvent extends Document {
   location: IEventLocation;
   ticketTypes: ITicketType[];
   isPublic: boolean;
-  status: 'draft' | 'pending' | 'approved';
+  status: "draft" | "pending" | "approved";
+  formConfig?: any;
+  attendees: {
+    attendeeId: string;
+    data: Record<string, any>; // dynamic form data
+  }[];
   bannerUrl?: string;
   brochureUrl?: string;
   speakerImages: string[];
@@ -39,20 +43,25 @@ const TicketTypeSchema = new Schema<ITicketType>({
   name: { type: String, required: true, trim: true },
   price: { type: Number, required: true, min: 0 },
   isActive: { type: Boolean, default: true },
-  sold : {type : Number, required : true, default:0}
+  sold: { type: Number, required: true, default: 0 },
 });
 
 const EventLocationSchema = new Schema<IEventLocation>({
-  type: { type: String, enum: ['online', 'offline'], required: true },
+  type: { type: String, enum: ["online", "offline"], required: true },
   address: { type: String },
-  onlineUrl: { type: String }
+  onlineUrl: { type: String },
 });
-
 
 const EventSchema = new Schema<IEvent>(
   {
     title: { type: String, required: true, trim: true },
-    slug: { type: String, required: true, unique: true, lowercase: true, index: true },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      index: true,
+    },
     description: { type: String, required: true },
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
@@ -61,37 +70,61 @@ const EventSchema = new Schema<IEvent>(
     isPublic: { type: Boolean, default: false },
     status: {
       type: String,
-      enum: ['draft', 'pending', 'approved'],
-      default: 'draft'
+      enum: ["draft", "pending", "approved"],
+      default: "draft",
     },
+    formConfig: {
+      type: Schema.Types.Mixed,
+      default: null,
+    },
+    attendees: {
+      type: [
+        {
+          attendeeId: {
+            type: String,
+            required: true,
+          },
+          data: {
+            type: Schema.Types.Mixed,
+            required: true,
+          },
+        },
+      ],
+      default: [],
+    },
+
     bannerUrl: { type: String },
     brochureUrl: { type: String },
     speakerImages: [{ type: String }],
     organizer: {
       type: Schema.Types.ObjectId,
       ref: User.modelName,
-      required: true
+      required: true,
     },
     approvedBy: {
       type: Schema.Types.ObjectId,
       ref: User.modelName,
-      required: false
-    }
+      required: false,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
 // Optional indexes
 EventSchema.index({ organizer: 1 });
 EventSchema.index({ status: 1 });
+EventSchema.index(
+  { _id: 1, "attendees.attendeeId": 1 },
+  { unique: true, sparse: true }
+);
+
 
 const Event =
-  mongoose.models.Event || mongoose.model<IEvent>('Event', EventSchema);
+  mongoose.models.Event || mongoose.model<IEvent>("Event", EventSchema);
 
 export default Event;
-
 
 // import mongoose, { Document, Schema } from 'mongoose';
 
@@ -325,10 +358,10 @@ export default Event;
 // EventSchema.index({ tags: 1 });
 
 // // Text search index
-// EventSchema.index({ 
-//   title: 'text', 
-//   description: 'text', 
-//   shortDescription: 'text' 
+// EventSchema.index({
+//   title: 'text',
+//   description: 'text',
+//   shortDescription: 'text'
 // });
 
-// export const Event = mongoose.models.Event || mongoose.model<IEvent>('Event', EventSchema); for this schema make an api in next js to create, update and delete event 
+// export const Event = mongoose.models.Event || mongoose.model<IEvent>('Event', EventSchema); for this schema make an api in next js to create, update and delete event

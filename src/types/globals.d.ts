@@ -28,28 +28,28 @@ export type Roles = "Admin" | "Organizer" | "Attendee";
 //   updatedAt: string
 // }
 
-export interface EventWithDetails {
-  _id: string | { toString(): string }
-  title: string
-  slug: string
-  description: string
-  startDate: string | Date
-  endDate: string | Date
-  location: {
-    type: string
-    address: string
-  }
-  ticketTypes: Array<{
-    name: string
-    price: number
-    isActive?: boolean
-    sold?: number
-    _id?: string | { toString(): string }
-  }>
-  isPublic?: boolean
-  status: 'active' | 'pending' | 'draft' | 'cancelled'
-  bannerUrl : string
-}
+// export interface EventWithDetails {
+//   _id: string | { toString(): string }
+//   title: string
+//   slug: string
+//   description: string
+//   startDate: string | Date
+//   endDate: string | Date
+//   location: {
+//     type: string
+//     address: string
+//   }
+//   ticketTypes: Array<{
+//     name: string
+//     price: number
+//     isActive?: boolean
+//     sold?: number
+//     _id?: string | { toString(): string }
+//   }>
+//   isPublic?: boolean
+//   status: 'active' | 'pending' | 'draft' | 'cancelled'
+//   bannerUrl : string
+// }
 
 export type EventsApiResponse = {
   success: boolean

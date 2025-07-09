@@ -15,7 +15,6 @@ export const useRoleAuth = (requiredRole?: string) => {
   const userRole = user?.unsafeMetadata?.role as string || 'attendee'
 
   const hasRequiredRole = requiredRole ? userRole === requiredRole : true
-
   return {
     user,
     userRole,

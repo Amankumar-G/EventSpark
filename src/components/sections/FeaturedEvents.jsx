@@ -1,9 +1,15 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { motion } from "framer-motion"
-
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import Link from "next/link";
+import { motion } from "framer-motion";
 export function FeaturedEvents() {
   return (
     <section className="bg-gray-50 py-20">
@@ -23,14 +29,17 @@ export function FeaturedEvents() {
             hidden: { opacity: 0 },
             visible: {
               opacity: 1,
-              transition: { staggerChildren: 0.2 }
-            }
+              transition: { staggerChildren: 0.2 },
+            },
           }}
         >
           {[1, 2, 3].map((item) => (
             <motion.div
               key={item}
-              variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }}
+              variants={{
+                hidden: { y: 20, opacity: 0 },
+                visible: { y: 0, opacity: 1 },
+              }}
               whileHover={{ y: -5 }}
             >
               <Card className="hover:shadow-lg transition">
@@ -40,12 +49,20 @@ export function FeaturedEvents() {
                 <CardContent>
                   <CardTitle>Community Tech Conference</CardTitle>
                   <CardDescription className="mt-2">
-                    Join us for a day of innovation and networking with industry leaders.
+                    Join us for a day of innovation and networking with industry
+                    leaders.
                   </CardDescription>
                   <div className="mt-4 flex justify-between items-center">
-                    <span className="text-sm text-[#468FAF]">July 15, 2025</span>
-                    <Button variant="link" className="text-[#FF6B6B] p-0 h-auto">
-                      View Details
+                    <span className="text-sm text-[#468FAF]">
+                      July 15, 2025
+                    </span>
+                    <Button
+                      variant="link"
+                      className="text-[#FF6B6B] p-0 h-auto"
+                    >
+                      <Link href={`/events`}>
+                        View details
+                      </Link>
                     </Button>
                   </div>
                 </CardContent>
@@ -56,10 +73,12 @@ export function FeaturedEvents() {
 
         <div className="mt-12">
           <Button className="bg-[#FF6B6B] hover:bg-[#e55f5f] text-white">
-            View All Events
+            <Link href={`/events`}>
+              View All Events
+            </Link>
           </Button>
         </div>
       </div>
     </section>
-  )
+  );
 }

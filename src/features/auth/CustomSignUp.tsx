@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label'
 
 export default function CustomSignUp() {
   const [selectedRole, setSelectedRole] = useState<string>('attendee')
-  console.log('Selected Role:', selectedRole)
   const roleOptions = [
     { 
       role: 'attendee', 

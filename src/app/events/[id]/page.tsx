@@ -114,7 +114,7 @@ const getTicketPriceRange = (
 
 // --- Main Component ---
 export default function SingleEventPage() {
-  const { slug } = useParams() as { slug: string };
+  const { id } = useParams() as { id: string };
   const [event, setEvent] = useState<EventWithDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -124,7 +124,7 @@ export default function SingleEventPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await axios.get(`/api/events/${slug}`);
+        const response = await axios.get(`/api/events/${id}`);
         setEvent(response.data.event);
       } catch (err) {
         console.error("Error fetching event details:", err);
@@ -135,7 +135,7 @@ export default function SingleEventPage() {
     };
 
     fetchEvent();
-  }, [slug]);
+  }, [id]);
 
   if (isLoading) {
     return (
@@ -244,10 +244,6 @@ export default function SingleEventPage() {
     category,
   } = event;
 
-  const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    "thaltej"
-  )}`;
-  console.log(bannerUrl);
   return (
     <motion.div
       initial="hidden"
@@ -285,18 +281,18 @@ export default function SingleEventPage() {
       </motion.header>
 
       {/* Main Content */}
-   <main className="container mx-auto px-4 pt-16 pb-16 max-w-5xl">
-    <motion.div
+      <main className="container mx-auto px-4 pt-16 pb-16 max-w-5xl">
+        <motion.div
           variants={sectionSlideIn}
-          className="mb-10 relative w-full h-[30vh] md:h-[40vh] lg:h-[50vh] rounded-2xl overflow-hidden shadow-xl border-8 border-white"   >
+          className="mb-10 relative w-full h-[30vh] md:h-[40vh] lg:h-[50vh] rounded-2xl overflow-hidden shadow-xl border-8 border-white"
+        >
           {bannerUrl ? (
-           <Image
-            src={bannerUrl}
-            alt={title}
-            fill
-            className="object-cover object-center"
-          />
-
+            <Image
+              src={bannerUrl}
+              alt={title}
+              fill
+              className="object-cover object-center"
+            />
           ) : (
             <div className="flex items-center justify-center w-full h-full bg-gradient-to-r from-[#468FAF] to-[#FF6B6B] text-white text-xl">
               {title}
@@ -402,101 +398,106 @@ export default function SingleEventPage() {
             )}
 
             {/* Location Section */}
-            {/* Location Section */}
-<motion.section variants={sectionSlideIn}>
-  <Card className="border-0 shadow-sm rounded-2xl">
-    <CardHeader>
-      <CardTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-        <MapPin className="h-6 w-6 text-[#468FAF]" />
-        Location
-      </CardTitle>
-    </CardHeader>
-    <CardContent>
-      <div className="space-y-4">
-        <div className="flex items-start">
-          <div className="bg-gray-100 p-3 rounded-lg">
-            {location.type === "offline" ? (
-              <MapPin className="h-6 w-6 text-[#FF6B6B]" />
-            ) : (
-              <Globe className="h-6 w-6 text-[#468FAF]" />
-            )}
-          </div>
-          <div className="ml-4">
-            <h3 className="font-medium text-lg text-gray-800">
-              {location.type === "offline"
-                ? "In-Person Event"
-                : "Online Event"}
-            </h3>
-            <p className="text-gray-600 mt-1">{location.address}</p>
-          </div>
-        </div>
+            <motion.section variants={sectionSlideIn}>
+              <Card className="border-0 shadow-sm rounded-2xl">
+                <CardHeader>
+                  <CardTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <MapPin className="h-6 w-6 text-[#468FAF]" />
+                    Location
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-start">
+                      <div className="bg-gray-100 p-3 rounded-lg">
+                        {location.type === "offline" ? (
+                          <MapPin className="h-6 w-6 text-[#FF6B6B]" />
+                        ) : (
+                          <Globe className="h-6 w-6 text-[#468FAF]" />
+                        )}
+                      </div>
+                      <div className="ml-4">
+                        <h3 className="font-medium text-lg text-gray-800">
+                          {location.type === "offline"
+                            ? "In-Person Event"
+                            : "Online Event"}
+                        </h3>
+                        <p className="text-gray-600 mt-1">{location.address}</p>
+                      </div>
+                    </div>
 
-        {location.type === "offline" && (
-          <div className="space-y-4">
-            {/* Map Display */}
-            <div className="rounded-xl overflow-hidden w-full h-64 border-2 border-gray-200">
-                <iframe
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent(location.address)}&output=embed`}
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  className="rounded-xl"
-                />
-              </div>
-            {/* Map Actions */}
-            <div className="flex gap-3">
-              <Button
-                asChild
-                variant="outline"
-                className="text-[#FF6B6B] border-[#FF6B6B] hover:bg-[#FF6B6B]/10"
-              >
-                <Link
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.address)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <MapPin className="h-4 w-4 mr-2" />
-                  View on Google Maps
-                </Link>
-              </Button>
-              
-              <Button
-                asChild
-                variant="outline"
-                className="text-[#468FAF] border-[#468FAF] hover:bg-[#468FAF]/10"
-              >
-                <Link
-                  href={`https://maps.apple.com/?q=${encodeURIComponent(location.address)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <MapPin className="h-4 w-4 mr-2" />
-                  View on Apple Maps
-                </Link>
-              </Button>
-            </div>
-          </div>
-        )}
+                    {location.type === "offline" && (
+                      <div className="space-y-4">
+                        {/* Map Display */}
+                        <div className="rounded-xl overflow-hidden w-full h-64 border-2 border-gray-200">
+                          <iframe
+                            src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                              location.address
+                            )}&output=embed`}
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0 }}
+                            className="rounded-xl"
+                          />
+                        </div>
+                        {/* Map Actions */}
+                        <div className="flex gap-3">
+                          <Button
+                            asChild
+                            variant="outline"
+                            className="text-[#FF6B6B] border-[#FF6B6B] hover:bg-[#FF6B6B]/10"
+                          >
+                            <Link
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                                location.address
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <MapPin className="h-4 w-4 mr-2" />
+                              View on Google Maps
+                            </Link>
+                          </Button>
 
-        {location.type === "online" && (
-          <div className="bg-gradient-to-r from-[#468FAF]/10 to-[#FF6B6B]/10 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between">
-            <div>
-              <h3 className="font-medium text-lg text-gray-800">
-                Online Access
-              </h3>
-              <p className="text-gray-600 mt-1">
-                Link will be provided after registration
-              </p>
-            </div>
-            <Button className="mt-4 sm:mt-0 bg-gradient-to-r from-[#468FAF] to-[#3a7a99] hover:from-[#3a7a99] hover:to-[#468FAF] text-white">
-              <Globe className="h-4 w-4 mr-2" /> Join Online
-            </Button>
-          </div>
-        )}
-      </div>
-    </CardContent>
-  </Card>
-</motion.section>
+                          <Button
+                            asChild
+                            variant="outline"
+                            className="text-[#468FAF] border-[#468FAF] hover:bg-[#468FAF]/10"
+                          >
+                            <Link
+                              href={`https://maps.apple.com/?q=${encodeURIComponent(
+                                location.address
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <MapPin className="h-4 w-4 mr-2" />
+                              View on Apple Maps
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {location.type === "online" && (
+                      <div className="bg-gradient-to-r from-[#468FAF]/10 to-[#FF6B6B]/10 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between">
+                        <div>
+                          <h3 className="font-medium text-lg text-gray-800">
+                            Online Access
+                          </h3>
+                          <p className="text-gray-600 mt-1">
+                            Link will be provided after registration
+                          </p>
+                        </div>
+                        <Button className="mt-4 sm:mt-0 bg-gradient-to-r from-[#468FAF] to-[#3a7a99] hover:from-[#3a7a99] hover:to-[#468FAF] text-white">
+                          <Globe className="h-4 w-4 mr-2" /> Join Online
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.section>
           </div>
 
           {/* Sidebar Content */}
@@ -607,7 +608,10 @@ export default function SingleEventPage() {
                       .filter((t) => t.isActive)
                       .map((ticket) => (
                         <div
-                          key={ticket._id}
+                          key={
+                            ticket._id?.toString() ??
+                            `ticket-${ticket.name}-${ticket.price}`
+                          }
                           className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0"
                         >
                           <div>
@@ -632,8 +636,17 @@ export default function SingleEventPage() {
 
                   <motion.div whileHover={buttonHover}>
                     <Button
+                      type="button"
+                      variant="outline"
                       className="w-full bg-gradient-to-r from-[#FF6B6B] to-[#e55f5f] hover:from-[#e55f5f] hover:to-[#FF6B6B] text-white py-6 text-lg rounded-xl font-bold"
                       size="lg"
+                      onClick={() =>
+                        window.open(
+                          `${id}/register`,
+                          "_blank",
+                          "noopener=false"
+                        )
+                      }
                     >
                       Register Now
                     </Button>
@@ -660,8 +673,13 @@ export default function SingleEventPage() {
           </p>
           <motion.div whileHover={buttonHover}>
             <Button
+              type="button"
+              variant="outline"
               className="bg-white text-[#FF6B6B] hover:bg-white/90 px-8 py-6 text-lg font-bold rounded-xl"
               size="lg"
+              onClick={() =>
+                window.open(`${id}/register`, "_blank", "noopener=false")
+              }
             >
               Register Now
             </Button>
