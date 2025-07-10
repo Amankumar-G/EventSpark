@@ -50,12 +50,9 @@ export default function DetailsTab({
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === "FORMALUTE_FORM_CONFIG") {
         setFormBuilderConfig(event.data.payload);
-
-        // ✅ You can also call setValue to include it in your form submission
         setValue("formConfig", event.data.payload);
       }
     };
-
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [setValue]);
@@ -92,10 +89,10 @@ export default function DetailsTab({
   };
 
   return (
-    <>
-      <div className="grid grid-cols-2 gap-6">
-        {/* Start Date */}
-        <div className="space-y-3">
+    <div className="space-y-8">
+      {/* Dates */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
           <Label htmlFor="startDate">
             Start Date & Time <span className="text-red-500">*</span>
           </Label>
@@ -103,15 +100,14 @@ export default function DetailsTab({
             id="startDate"
             type="datetime-local"
             {...register("startDate", { required: true })}
-            className="focus-visible:ring-[#468FAF] h-11"
+            className="h-11 focus-visible:ring-[#468FAF]"
           />
           {errors.startDate && (
             <p className="text-sm text-red-500">Start date is required</p>
           )}
         </div>
 
-        {/* End Date */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <Label htmlFor="endDate">
             End Date & Time <span className="text-red-500">*</span>
           </Label>
@@ -119,7 +115,7 @@ export default function DetailsTab({
             id="endDate"
             type="datetime-local"
             {...register("endDate", { required: true })}
-            className="focus-visible:ring-[#468FAF] h-11"
+            className="h-11 focus-visible:ring-[#468FAF]"
           />
           {errors.endDate && (
             <p className="text-sm text-red-500">End date is required</p>
@@ -128,14 +124,14 @@ export default function DetailsTab({
       </div>
 
       {/* Event Type */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         <Label>Event Type</Label>
         <Controller
           control={control}
           name="location.type"
           render={({ field }) => (
             <Select onValueChange={field.onChange} value={field.value}>
-              <SelectTrigger className="focus:ring-[#468FAF] h-11">
+              <SelectTrigger className="h-11 focus-visible:ring-[#468FAF]">
                 <SelectValue placeholder="Select event type" />
               </SelectTrigger>
               <SelectContent>
@@ -148,7 +144,7 @@ export default function DetailsTab({
       </div>
 
       {/* Location */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         <Label htmlFor="location">
           Location <span className="text-red-500">*</span>
         </Label>
@@ -157,17 +153,17 @@ export default function DetailsTab({
             id="location"
             placeholder="Enter venue address"
             {...register("location.address", { required: true })}
-            className="pl-10 focus-visible:ring-[#468FAF] h-11"
+            className="pl-10 h-11 focus-visible:ring-[#468FAF]"
           />
           <MapPin className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-          {errors.location?.address && (
-            <p className="text-sm text-red-500">Location is required</p>
-          )}
         </div>
+        {errors.location?.address && (
+          <p className="text-sm text-red-500">Location is required</p>
+        )}
       </div>
 
       {/* Banner Upload */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         <Label>Banner Image</Label>
         <input
           type="file"
@@ -210,7 +206,7 @@ export default function DetailsTab({
       </div>
 
       {/* Speaker Upload */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         <Label>Speaker Images</Label>
         <input
           type="file"
@@ -251,7 +247,7 @@ export default function DetailsTab({
       </div>
 
       {/* Brochure Upload */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         <Label>Brochure File</Label>
         <input
           type="file"
@@ -289,8 +285,9 @@ export default function DetailsTab({
           )}
         </div>
       </div>
-      {/* Form Builder Button & Instructions */}
-      <div className="space-y-3">
+
+      {/* Form Builder */}
+      <div className="space-y-2">
         <Label>Form Builder (Experimental)</Label>
         <div className="flex items-center gap-4">
           <Button
@@ -303,8 +300,6 @@ export default function DetailsTab({
           >
             Open Form Builder
           </Button>
-
-          {/* Show Clear Form button if config exists */}
           {formBuilderConfig && (
             <Button
               type="button"
@@ -319,19 +314,16 @@ export default function DetailsTab({
             </Button>
           )}
         </div>
-
-        {/* Show confirmation if form config is present */}
         {formBuilderConfig && (
           <p className="text-sm text-green-600 font-medium">
             ✅ Custom form added successfully!
           </p>
         )}
-
         <p className="text-sm text-muted-foreground">
           Select form fields for attendees to fill out, then click{" "}
           <strong>Publish</strong> to confirm and save the form.
         </p>
       </div>
-    </>
+    </div>
   );
 }

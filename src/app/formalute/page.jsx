@@ -11,9 +11,9 @@ const App = () => {
           type: "FORMALUTE_FORM_CONFIG",
           payload: jsonConfig,
         },
-        "*" // You can replace * with your actual domain for safety
+        "*" 
       );
-      window.close(); // optional: close the tab after publish
+      window.close(); 
     }
   };
 
