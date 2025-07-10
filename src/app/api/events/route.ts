@@ -124,7 +124,6 @@ export async function GET(req: NextRequest) {
     } else {
       // For regular users, only show public events
       events = await Event.find({ isPublic: true, status: 'approved' }).populate('organizer', 'name email').sort({ createdAt: -1 })
-      console.log(events)
     }
 
     return NextResponse.json({ success: true, events }, { status: 200 })

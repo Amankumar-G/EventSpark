@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import { v2 as cloudinary } from 'cloudinary';
 import { auth } from '@clerk/nextjs/server'
 import { IEvent } from "@/models/Event";
+import Booking from "@/models/Booking"; // ✅ Add this import
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
@@ -35,24 +36,28 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   try {
     await connect();
     
-    const { userId: clearId } = await auth();
+    const { userId: clerkId } = await auth();
     const { id } =await params;
-    console.log("hitted")
+
     if (!id) {
       return NextResponse.json({ success: false, error: "Missing event ID" }, { status: 400 });
     }
 
-    const event = await Event.findOne({ slug: id }).lean<IEvent>();// Use lean() to get plain object
-
+    const event = await Event.findOne({ slug: id }).lean<IEvent>();
     if (!event) {
       return NextResponse.json({ success: false, error: "Event not found" }, { status: 404 });
     }
 
-    // Check if current user is in the attendee list
-    const isRegistered = event.attendees?.some((attendee: any) => attendee.attendeeId === clearId);
+    // ✅ Replaced old logic that checked Event.attendees with Booking query
+    const existingBooking = await Booking.findOne({
+      eventId: event._id,
+      attendeeId: clerkId,
+    });
 
-    // Add `registered: true/false` flag
-    const responseEvent = { ...event, registered: isRegistered || false };
+    const isRegistered = !!existingBooking;
+
+    // Add registered flag
+    const responseEvent = { ...event, registered: isRegistered };
 
     return NextResponse.json({ success: true, event: responseEvent }, { status: 200 });
 

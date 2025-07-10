@@ -35,7 +35,6 @@ export default function EventListingScreen() {
       setError(null);
       try {
         const response = await axios.get("/api/events");
-        console.log(response);
         setEvents(response.data.events);
         setFilteredEvents(response.data.events);
       } catch (err) {

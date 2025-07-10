@@ -1,30 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
-import { connect } from '@/dbConfig/dbConfig';// your DB connect helper
-import Event from "@/models/Event"; // your Mongoose Event model
+import { connect } from '@/dbConfig/dbConfig';
+import Event from "@/models/Event";
+import Booking from "@/models/Booking"; // ✅ Use new Booking model
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   await connect();
-  const {id} = await params
-  const event = await Event.findById(id);
+  const { id } =await params;
 
+  const event = await Event.findById(id);
   if (!event) {
     return NextResponse.json({ error: "Event not found" }, { status: 404 });
   }
 
-  const attendees = event.attendees || [];
+  // ✅ Fetch attendees from Booking model
+  const bookings = await Booking.find({ eventId: id }).lean();
 
-  type Attendee = { attendeeId: string; data: Record<string, any> };
+  type AttendeeRow = { AttendeeID: string; [key: string]: any };
 
-  const rows = (attendees as Attendee[]).map(({ attendeeId, data }) => ({
-    AttendeeID: attendeeId,
-    ...data,
+  const rows: AttendeeRow[] = bookings.map((booking) => ({
+    AttendeeID: booking.attendeeId,
+    ...booking.formData, // spread formData fields into Excel row
   }));
 
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Attendees");
 
-  // Dynamically create columns from first data row
   if (rows.length > 0) {
     worksheet.columns = Object.keys(rows[0]).map((key) => ({
       header: key,

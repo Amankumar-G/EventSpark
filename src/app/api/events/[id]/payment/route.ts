@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { connect } from "@/dbConfig/dbConfig";
 import Event from "@/models/Event";
+import Booking from "@/models/Booking"; // ✅ New Booking model
 import { auth } from "@clerk/nextjs/server";
 import mongoose from "mongoose";
 
@@ -12,8 +13,8 @@ export async function POST(
   try {
     await connect();
     const { id } = await params;
-
     const { userId } = await auth();
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -35,20 +36,20 @@ export async function POST(
     if (!ticket || !ticket.isActive) {
       return NextResponse.json({ error: "Invalid or inactive ticket" }, { status: 400 });
     }
-    
-    // Check if already registered
-    const alreadyRegistered = await Event.findOne({
-      _id: id,
-      "attendees.attendeeId": userId,
+
+    // ✅ Check in Booking model instead of Event.attendees
+    const existingBooking = await Booking.findOne({
+      eventId: event._id,
+      attendeeId: userId,
     });
 
-    if (alreadyRegistered) {
+    if (existingBooking) {
       return NextResponse.json({ error: "Already registered" }, { status: 400 });
     }
 
-    // Create PaymentIntent
+    // ✅ Create Stripe PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: ticket.price * 100, // amount in paisa
+      amount: ticket.price * 100, // convert to paisa
       currency: "inr",
       metadata: {
         eventId: event._id.toString(),
