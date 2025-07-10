@@ -97,8 +97,6 @@ export default function SingleEventPage() {
   );
 }
 
-// ---------- Helper Components ----------
-
 const LoadingState = () => (
   <div className="container mx-auto px-4 py-8 max-w-5xl">
     <Skeleton className="h-10 w-48 mb-8" />

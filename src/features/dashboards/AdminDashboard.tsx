@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useUser } from '@clerk/nextjs';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useUser } from "@clerk/nextjs";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -12,12 +12,19 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { CalendarDays, MapPin, Ticket, Trash2, CheckCircle } from 'lucide-react';
-import { useEffect, useState, useCallback } from 'react';
-import axios from 'axios';
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  CalendarDays,
+  MapPin,
+  Ticket,
+  Trash2,
+  CheckCircle,
+
+} from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import axios from "axios";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +35,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 import {
   BarChart,
   Bar,
@@ -41,10 +48,12 @@ import {
   Pie,
   Cell,
   Legend,
-} from 'recharts';
+  Line,
+  LineChart,
+} from "recharts";
 
 // Assuming you have this type defined in '@/types/globals'
-import { EventWithDetails } from '@/features/events/types/event';
+import { EventWithDetails } from "@/features/events/types/event";
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -66,10 +75,10 @@ export default function AdminDashboard() {
     setError(null);
     try {
       // Replace with your actual API endpoint for fetching all events
-      const response = await axios.get('/api/events');
+      const response = await axios.get("/api/events");
       setEvents(response.data.events);
     } catch (err) {
-      console.error('Error fetching events:', err);
+      console.error("Error fetching events:", err);
       setError(err as Error);
     } finally {
       setIsLoading(false);
@@ -86,30 +95,51 @@ export default function AdminDashboard() {
     fetchEvents(); // Refetch events after an action
   };
 
-  const activeEvents = events.filter(e => e.status === 'active').length;
-  const pendingEvents = events.filter(e => e.status === 'pending').length;
+  const activeEvents = events.filter((e) => e.status === "approved").length;
+  const pendingEvents = events.filter((e) => e.status === "pending").length;
   const totalRegistrations = events.reduce(
     (sum, event) =>
-      sum + event.ticketTypes.reduce((tSum, ticket) => tSum + (ticket.sold || 0), 0),
+      sum +
+      event.ticketTypes.reduce((tSum, ticket) => tSum + (ticket.sold || 0), 0),
     0
   );
   const totalEarnings = events.reduce(
     (sum, event) =>
-      sum + event.ticketTypes.reduce((tSum, ticket) => tSum + (ticket.sold || 0) * ticket.price, 0),
+      sum +
+      event.ticketTypes.reduce(
+        (tSum, ticket) => tSum + (ticket.sold || 0) * ticket.price,
+        0
+      ),
     0
   );
 
   const summaryCards = [
-    { title: 'Active Events', value: activeEvents, change: '+2 from last month', icon: '🎯' },
-    { title: 'Pending Approvals', value: pendingEvents, change: '1 needs attention', icon: '⏳' },
-    { title: 'Total Registrations', value: totalRegistrations, change: '↑ 12% from last month', icon: '🎟️' },
-    { title: 'Total Earnings', value: `$${totalEarnings.toLocaleString()}`, change: '↑ 8% from last month', icon: '💰' },
+    {
+      title: "Active Events",
+      value: activeEvents,
+      icon: "🎯",
+    },
+    {
+      title: "Pending Approvals",
+      value: pendingEvents,
+      icon: "⏳",
+    },
+    {
+      title: "Total Registrations",
+      value: totalRegistrations,
+      icon: "🎟️",
+    },
+    {
+      title: "Total Earnings",
+      value: `$${totalEarnings.toLocaleString()}`,
+      icon: "💰",
+    },
   ];
 
   // Data for charts
   const statusDistributionData = [
-    { name: 'Active', value: activeEvents },
-    { name: 'Pending', value: pendingEvents }, 
+    { name: "Active", value: activeEvents },
+    { name: "Pending", value: pendingEvents },
   ];
 
   const categoryDistributionData = events.reduce((acc, event) => {
@@ -117,18 +147,34 @@ export default function AdminDashboard() {
     return acc;
   }, {} as Record<string, number>);
 
-  const categoryChartData = Object.entries(categoryDistributionData).map(([name, value]) => ({ name, value }));
+  const categoryChartData = Object.entries(categoryDistributionData).map(
+    ([name, value]) => ({ name, value })
+  );
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF19A3'];
+  const COLORS = [
+    "#0088FE",
+    "#00C49F",
+    "#FFBB28",
+    "#FF8042",
+    "#AF19FF",
+    "#FF19A3",
+  ];
 
-  if (error) return <div className="text-red-500 p-4">Error loading events: {error.message}</div>;
+  if (error)
+    return (
+      <div className="text-red-500 p-4">
+        Error loading events: {error.message}
+      </div>
+    );
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Overview of all events and system performance</p>
+          <p className="text-muted-foreground">
+            Overview of all events and system performance
+          </p>
         </div>
       </div>
 
@@ -146,7 +192,6 @@ export default function AdminDashboard() {
               <SummaryCard
                 title={card.title}
                 value={card.value}
-                change={card.change}
                 icon={card.icon}
                 index={index}
               />
@@ -163,8 +208,105 @@ export default function AdminDashboard() {
         className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"
       >
         <Card className="rounded-xl shadow-sm border p-4">
+  <CardHeader>
+    <CardTitle className="text-lg font-semibold">Event Location Types</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <ResponsiveContainer width="100%" height={300}>
+      <PieChart>
+        <Pie
+          data={categoryChartData}
+          cx="50%"
+          cy="50%"
+          innerRadius={60}
+          outerRadius={80}
+          paddingAngle={5}
+          dataKey="value"
+          label={({ name, percent=1 }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+        >
+          {categoryChartData.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip formatter={(value) => [`${value} events`, 'Count']} />
+        <Legend />
+      </PieChart>
+    </ResponsiveContainer>
+  </CardContent>
+</Card>
+        <Card className="rounded-xl shadow-sm border p-4">
+  <CardHeader>
+    <CardTitle className="text-lg font-semibold">Ticket Sales Breakdown</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart
+        data={events.flatMap(event => 
+          event.ticketTypes.map(ticket => ({
+            event: event.title,
+            type: ticket.name,
+            sales: ticket.sold,
+            revenue: ticket.sold * ticket.price
+          })))
+        }
+        margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="event" angle={-45} textAnchor="end" height={60} />
+        <YAxis />
+        <Tooltip 
+          formatter={(value, name) => 
+            name === 'sales' ? [value, 'Tickets Sold'] : [`$${value}`, 'Revenue']
+          }
+        />
+        <Legend />
+        <Bar dataKey="sales" name="Tickets Sold" stackId="a" fill="#82ca9d" />
+        <Bar dataKey="revenue" name="Revenue" stackId="a" fill="#8884d8" />
+      </BarChart>
+    </ResponsiveContainer>
+  </CardContent>
+</Card>
+        <Card className="rounded-xl shadow-sm border p-4">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Event Status Distribution</CardTitle>
+            <CardTitle className="text-lg font-semibold">
+              Monthly Earnings
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart
+                data={[
+                  { month: "Jan", earnings: 4000 },
+                  { month: "Feb", earnings: 3000 },
+                  { month: "Mar", earnings: 5000 },
+                  { month: "Apr", earnings: 2780 },
+                  { month: "May", earnings: 1890 },
+                  { month: "Jun", earnings: 2390 },
+                  { month: "Jul", earnings: totalEarnings },
+                ]}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip formatter={(value) => [`$${value}`, "Earnings"]} />
+                <Line
+                  type="monotone"
+                  dataKey="earnings"
+                  stroke="#8884d8"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+        <Card className="rounded-xl shadow-sm border p-4">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold">
+              Event Status Distribution
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -177,41 +319,20 @@ export default function AdminDashboard() {
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
-                  label={({ name, percent=10 }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent = 10 }) =>
+                    `${name} ${(percent * 100).toFixed(0)}%`
+                  }
                 >
                   {statusDistributionData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
                   ))}
                 </Pie>
                 <Tooltip />
                 <Legend />
               </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-xl shadow-sm border p-4">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">Events by Category</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart
-                data={categoryChartData}
-                margin={{
-                  top: 5,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="value" fill="#82ca9d" />
-              </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
@@ -227,7 +348,7 @@ export default function AdminDashboard() {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold">All Events</h2>
           <div className="text-sm text-muted-foreground">
-            {events.length} {events.length === 1 ? 'event' : 'events'} total
+            {events.length} {events.length === 1 ? "event" : "events"} total
           </div>
         </div>
 
@@ -238,7 +359,11 @@ export default function AdminDashboard() {
             ))}
           </div>
         ) : (
-          <AdminEventsTable events={events} onEventAction={handleEventActionSuccess} isLoading={isLoading} />
+          <AdminEventsTable
+            events={events}
+            onEventAction={handleEventActionSuccess}
+            isLoading={isLoading}
+          />
         )}
       </motion.div>
     </div>
@@ -248,18 +373,21 @@ export default function AdminDashboard() {
 function SummaryCard({
   title,
   value,
-  change,
   icon,
   index,
 }: {
   title: string;
   value: string | number;
-  change: string;
   icon: string;
   index: number;
 }) {
-  const colors = ['bg-blue-50', 'bg-orange-50', 'bg-green-50', 'bg-purple-50'];
-  const accents = ['text-[#468FAF]', 'text-[#FF6B6B]', 'text-green-600', 'text-purple-600'];
+  const colors = ["bg-blue-50", "bg-orange-50", "bg-green-50", "bg-purple-50"];
+  const accents = [
+    "text-[#468FAF]",
+    "text-[#FF6B6B]",
+    "text-green-600",
+    "text-purple-600",
+  ];
 
   return (
     <Card className={`${colors[index]} border-0 rounded-xl h-full`}>
@@ -271,22 +399,29 @@ function SummaryCard({
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground mt-1">{change}</p>
       </CardContent>
     </Card>
   );
 }
 
-function AdminEventsTable({ events, onEventAction, isLoading }: { events: EventWithDetails[]; onEventAction: () => void; isLoading: boolean }) {
+function AdminEventsTable({
+  events,
+  onEventAction,
+  isLoading,
+}: {
+  events: EventWithDetails[];
+  onEventAction: () => void;
+  isLoading: boolean;
+}) {
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'active':
+      case "active":
         return <Badge variant="default">Active</Badge>;
-      case 'pending':
+      case "pending":
         return <Badge variant="outline">Pending</Badge>;
-      case 'draft':
+      case "draft":
         return <Badge variant="secondary">Draft</Badge>;
-      case 'cancelled':
+      case "cancelled":
         return <Badge variant="destructive">Cancelled</Badge>;
       default:
         return <Badge>{status}</Badge>;
@@ -295,7 +430,7 @@ function AdminEventsTable({ events, onEventAction, isLoading }: { events: EventW
 
   const getCheapestTicketPrice = (ticketTypes: { price: number }[]) => {
     if (!ticketTypes.length) return 0;
-    return Math.min(...ticketTypes.map(t => t.price));
+    return Math.min(...ticketTypes.map((t) => t.price));
   };
 
   const getTotalTicketsSold = (ticketTypes: { sold?: number }[]) => {
@@ -303,26 +438,26 @@ function AdminEventsTable({ events, onEventAction, isLoading }: { events: EventW
   };
 
   const handleDeleteEvent = async (eventId: string | object) => {
-    const id = typeof eventId === 'string' ? eventId : eventId.toString();
+    const id = typeof eventId === "string" ? eventId : eventId.toString();
     try {
       // Replace with your actual API endpoint for deleting an event
       await axios.delete(`/api/events/${id}`);
       onEventAction(); // Refresh data after deletion
     } catch (error) {
-      console.error('Error deleting event:', error);
-      alert('Failed to delete event. Please try again.');
+      console.error("Error deleting event:", error);
+      alert("Failed to delete event. Please try again.");
     }
   };
 
   const handleApproveEvent = async (eventId: string | object) => {
-    const id = typeof eventId === 'string' ? eventId : eventId.toString();
+    const id = typeof eventId === "string" ? eventId : eventId.toString();
     try {
       // Replace with your actual API endpoint for approving an event
       await axios.put(`/api/events/${id}/approve`);
       onEventAction(); // Refresh data after approval
     } catch (error) {
-      console.error('Error approving event:', error);
-      alert('Failed to approve event. Please try again.');
+      console.error("Error approving event:", error);
+      alert("Failed to approve event. Please try again.");
     }
   };
 
@@ -340,39 +475,33 @@ function AdminEventsTable({ events, onEventAction, isLoading }: { events: EventW
         </TableRow>
       </TableHeader>
       <TableBody>
-        {events.map(event => (
-          <TableRow key={typeof event._id === 'string' ? event._id : event._id.toString()}>
+        {events.map((event) => (
+          <TableRow
+            key={
+              typeof event._id === "string" ? event._id : event._id.toString()
+            }
+          >
             <TableCell className="font-medium">
               <div className="flex items-center gap-3">
-                {event.bannerUrl && (
-                  <img
-                    src={event.bannerUrl}
-                    alt={event.title}
-                    className="w-10 h-10 rounded-md object-cover"
-                  />
-                )}
-                <div>
-                  <div>{event.title}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {event.slug}
-                  </div>
-                </div>
+                <div>{event.title}</div>
               </div>
             </TableCell>
             <TableCell>{getStatusBadge(event.status)}</TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span>{event.location.address}</span>
+                <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="truncate max-w-[200px] overflow-hidden whitespace-nowrap text-sm text-muted-foreground">
+                  {event.location.address}
+                </span>
               </div>
             </TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-muted-foreground" />
                 <span>
-                  {new Date(event.startDate).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
+                  {new Date(event.startDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
                   })}
                 </span>
               </div>
@@ -385,11 +514,15 @@ function AdminEventsTable({ events, onEventAction, isLoading }: { events: EventW
             </TableCell>
             <TableCell>
               ${getCheapestTicketPrice(event.ticketTypes).toLocaleString()}
-              {event.ticketTypes.length > 1 && '+'}
+              {event.ticketTypes.length > 1 && "+"}
             </TableCell>
             <TableCell className="flex justify-end gap-2">
-              {event.status === 'pending' && (
-                <Button variant="outline" size="sm" onClick={() => handleApproveEvent(event._id)}>
+              {event.status === "pending" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleApproveEvent(event._id)}
+                >
                   <CheckCircle className="h-4 w-4 mr-1" /> Approve
                 </Button>
               )}
@@ -401,15 +534,19 @@ function AdminEventsTable({ events, onEventAction, isLoading }: { events: EventW
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogTitle>
+                      Are you absolutely sure?
+                    </AlertDialogTitle>
                     <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete the event
-                      and remove its data from our servers.
+                      This action cannot be undone. This will permanently delete
+                      the event and remove its data from our servers.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleDeleteEvent(event._id)}>
+                    <AlertDialogAction
+                      onClick={() => handleDeleteEvent(event._id)}
+                    >
                       Delete
                     </AlertDialogAction>
                   </AlertDialogFooter>
@@ -423,7 +560,10 @@ function AdminEventsTable({ events, onEventAction, isLoading }: { events: EventW
         ))}
         {events.length === 0 && !isLoading && (
           <TableRow>
-            <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+            <TableCell
+              colSpan={7}
+              className="text-center py-8 text-muted-foreground"
+            >
               No events found.
             </TableCell>
           </TableRow>

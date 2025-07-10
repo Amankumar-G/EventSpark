@@ -34,7 +34,10 @@ export async function POST(
     // Validate ticket
     const ticket = event.ticketTypes[ticketTypeIndex];
     if (!ticket || !ticket.isActive) {
-      return NextResponse.json({ error: "Invalid or inactive ticket" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid or inactive ticket" },
+        { status: 400 }
+      );
     }
 
     // ✅ Check in Booking model instead of Event.attendees
@@ -44,7 +47,10 @@ export async function POST(
     });
 
     if (existingBooking) {
-      return NextResponse.json({ error: "Already registered" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Already registered" },
+        { status: 400 }
+      );
     }
 
     // ✅ Create Stripe PaymentIntent
@@ -63,8 +69,9 @@ export async function POST(
     });
 
     return NextResponse.json({ clientSecret: paymentIntent.client_secret });
-  } catch (error: any) {
-    console.error("❌ create-payment-intent error:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "An unexpected error occurred";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

@@ -26,8 +26,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
     return NextResponse.json({ success: true, event: updated });
-  } catch (error: any) {
-    console.error("PUT Error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "An unexpected error occurred";
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
   }
 }

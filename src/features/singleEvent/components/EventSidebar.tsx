@@ -9,11 +9,32 @@ import {
   User,
   Tag,
   Users,
-  Ticket,
 } from "lucide-react";
 import { formatDateRange } from "../utils/formatDateRange";
 import { getTicketPriceRange } from "../utils/getTicketPriceRange";
 import { Badge } from "@/components/ui/badge";
+import { ITicketType,IEventLocation} from "@/models/Event"
+// ---------- Define types based on your schema ----------
+
+interface IEventSidebarProps {
+  startDate: string | Date;
+  endDate: string | Date;
+  location: IEventLocation;
+  organizer: {
+    name?: string;
+    email: string;
+  };
+  category: string;
+  ticketTypes: ITicketType[];
+  registered: boolean;
+  eventId: string;
+}
+
+interface DetailItemProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}
 
 const buttonHover = {
   scale: 1.03,
@@ -29,16 +50,7 @@ export const EventSidebar = ({
   ticketTypes,
   registered,
   eventId,
-}: {
-  startDate: string | Date;
-  endDate: string | Date;
-  location: any;
-  organizer: any;
-  category: string;
-  ticketTypes: any[];
-  registered: boolean;
-  eventId: string;
-}) => (
+}: IEventSidebarProps) => (
   <>
     <Card className="border-0 shadow-lg rounded-2xl">
       <CardHeader className="pb-4">
@@ -57,15 +69,14 @@ export const EventSidebar = ({
           icon={<Clock className="h-5 w-5 text-[#FF6B6B]" />}
           label="Duration"
           value={`${Math.round(
-            (new Date(endDate).getTime() - new Date(startDate).getTime()) /
-              (1000 * 60 * 60)
+            (new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60)
           )} hours`}
         />
 
         <DetailItem
           icon={<MapPin className="h-5 w-5 text-[#468FAF]" />}
           label="Location"
-          value={location.address}
+          value={location.address || "Online"}
         />
 
         <DetailItem
@@ -103,25 +114,20 @@ export const EventSidebar = ({
 
         <div className="space-y-4">
           <h3 className="font-medium text-gray-800">Available Tickets</h3>
-          {ticketTypes
-            .filter((t) => t.isActive)
-            .map((ticket) => (
-              <div
-                key={
-                  ticket._id?.toString() ??
-                  `ticket-${ticket.name}-${ticket.price}`
-                }
-                className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0"
-              >
-                <div>
-                  <p className="font-medium text-gray-800">{ticket.name}</p>
-                  <p className="text-sm text-gray-500">{ticket.sold} sold</p>
-                </div>
-                <p className="font-medium text-gray-800">
-                  ${ticket.price.toLocaleString()}
-                </p>
+          {ticketTypes.filter((t) => t.isActive).map((ticket) => (
+            <div
+              key={ticket._id?.toString() ?? `ticket-${ticket.name}-${ticket.price}`}
+              className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0"
+            >
+              <div>
+                <p className="font-medium text-gray-800">{ticket.name}</p>
+                <p className="text-sm text-gray-500">{ticket.sold} sold</p>
               </div>
-            ))}
+              <p className="font-medium text-gray-800">
+                ${ticket.price.toLocaleString()}
+              </p>
+            </div>
+          ))}
           {ticketTypes.filter((t) => t.isActive).length === 0 && (
             <p className="text-center text-gray-500 py-4">
               No tickets currently available
@@ -156,15 +162,7 @@ export const EventSidebar = ({
   </>
 );
 
-const DetailItem = ({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) => (
+const DetailItem = ({ icon, label, value }: DetailItemProps) => (
   <div className="flex items-start">
     <div className="bg-gray-100 p-3 rounded-lg">{icon}</div>
     <div className="ml-4">

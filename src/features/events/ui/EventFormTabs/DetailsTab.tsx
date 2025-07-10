@@ -44,7 +44,7 @@ export default function DetailsTab({
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [speakerPreviews, setSpeakerPreviews] = useState<string[]>([]);
   const [brochurePreview, setBrochurePreview] = useState<boolean>(false);
-  const [formBuilderConfig, setFormBuilderConfig] = useState<any | null>(null);
+  const [formBuilderConfig, setFormBuilderConfig] = useState<string | null>(null);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {

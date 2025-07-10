@@ -15,6 +15,7 @@ export const useFetchEvent = (id: string) => {
       try {
         const response = await axios.get(`/api/events/${id}`);
         setEvent(response.data.event);
+        console.log(response.data)
         setRegistered(response.data.event.registered);
       } catch (err) {
         console.error("Error fetching event details:", err);

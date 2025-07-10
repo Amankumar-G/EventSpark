@@ -4,6 +4,7 @@ import { useRoleAuth } from "@/features/auth/hooks/useRoleAuth";
 import RoleGuard from "@/features/auth/RoleGuard";
 import AdminDashboard from "@/features/dashboards/AdminDashboard";
 import OrganizerDashboard from "@/features/dashboards/OrganizerDashboard";
+import AtendeeDashboard from "@/features/dashboards/AtendeeDashboard";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -34,8 +35,14 @@ export default function Dashboard() {
             </RoleGuard>
           )}
 
+          {userRole === "attendee" && (
+            <RoleGuard requiredRole="attendee">
+              <AtendeeDashboard />
+            </RoleGuard>
+          )}
+
           {/* Optional fallback if user has unsupported userRole */}
-          {userRole !== "admin" && userRole !== "organizer" && (
+          {userRole !== "admin" && userRole !== "organizer" && userRole !== "attendee" && (
             <div className="text-center text-gray-500">
               Access denied. Insufficient permissions.
             </div>

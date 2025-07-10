@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,7 +11,73 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 import { motion } from "framer-motion";
+
+const formattedDate = (startDate) =>
+  new Date(startDate).toLocaleString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+// Define fallback dummy events
+const dummyEvents = [
+  {
+    _id: "dummy-1",
+    title: "Community Tech Conference",
+    description:
+      "Join us for a day of innovation and networking with industry leaders.",
+    startDate: "July 15, 2025",
+    slug: "tech-conference",
+  },
+  {
+    _id: "dummy-2",
+    title: "Health & Wellness Fair",
+    description:
+      "Explore health resources and enjoy fun activities with your family.",
+    startDate: "August 5, 2025",
+    slug: "wellness-fair",
+  },
+  {
+    _id: "dummy-3",
+    title: "Startup Pitch Night",
+    description:
+      "Watch top startups pitch their ideas to investors and mentors.",
+    startDate: "August 20, 2025",
+    slug: "pitch-night",
+  },
+];
+
 export function FeaturedEvents() {
+  const [events, setEvents] = useState(dummyEvents);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await fetch("/api/events"); // Your custom endpoint
+        const data = await res.json();
+        console.log(data);
+        if (data?.events && Array.isArray(data.events)) {
+          // Use fetched + dummy to ensure at least 3
+          const finalEvents = [...data.events];
+
+          if (finalEvents.length < 3) {
+            const needed = 3 - finalEvents.length;
+            finalEvents.push(...dummyEvents.slice(0, needed));
+          }
+
+          setEvents(finalEvents);
+        }
+      } catch (err) {
+        console.error("Failed to load featured events:", err);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
   return (
     <section className="bg-gray-50 py-20">
       <div className="container mx-auto px-4 text-center">
@@ -33,9 +100,9 @@ export function FeaturedEvents() {
             },
           }}
         >
-          {[1, 2, 3].map((item) => (
+          {events.slice(0, 3).map((event) => (
             <motion.div
-              key={item}
+              key={event._id}
               variants={{
                 hidden: { y: 20, opacity: 0 },
                 visible: { y: 0, opacity: 1 },
@@ -43,26 +110,35 @@ export function FeaturedEvents() {
               whileHover={{ y: -5 }}
             >
               <Card className="hover:shadow-lg transition">
-                <CardHeader>
-                  <div className="h-48 bg-gradient-to-r from-[#468FAF] to-[#FF6B6B] rounded-lg" />
+                <CardHeader className="p-0">
+                  <div className="h-48 rounded-lg overflow-hidden relative">
+                    {event.bannerUrl ? (
+                      <img
+                        src={event.bannerUrl}
+                        alt={event.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-r from-[#468FAF] to-[#FF6B6B]" />
+                    )}
+                    {/* Optional overlay gradient */}
+                    <div className="absolute inset-0 bg-black/10" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <CardTitle>Community Tech Conference</CardTitle>
+                  <CardTitle>{event.title}</CardTitle>
                   <CardDescription className="mt-2">
-                    Join us for a day of innovation and networking with industry
-                    leaders.
+                    {event.description}
                   </CardDescription>
                   <div className="mt-4 flex justify-between items-center">
                     <span className="text-sm text-[#468FAF]">
-                      July 15, 2025
+                      {formattedDate(event.startDate)}
                     </span>
                     <Button
                       variant="link"
                       className="text-[#FF6B6B] p-0 h-auto"
                     >
-                      <Link href={`/events`}>
-                        View details
-                      </Link>
+                      <Link href={`/events/${event.slug}`}>View details</Link>
                     </Button>
                   </div>
                 </CardContent>
@@ -73,9 +149,7 @@ export function FeaturedEvents() {
 
         <div className="mt-12">
           <Button className="bg-[#FF6B6B] hover:bg-[#e55f5f] text-white">
-            <Link href={`/events`}>
-              View All Events
-            </Link>
+            <Link href={`/events`}>View All Events</Link>
           </Button>
         </div>
       </div>

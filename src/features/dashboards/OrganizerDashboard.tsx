@@ -38,7 +38,7 @@ export default function OrganizerDashboard() {
     user?.id
   );
 
-  const activeEvents = events?.filter((e) => e.status === "active").length || 0;
+  const activeEvents = events?.filter((e) => e.status === "approved").length || 0;
 
   const pendingEvents =
     events?.filter((e) => e.status === "pending").length || 0;
@@ -73,25 +73,21 @@ export default function OrganizerDashboard() {
     {
       title: "Active Events",
       value: activeEvents,
-      change: "+2 from last month",
       icon: "🎯",
     },
     {
       title: "Pending Approvals",
       value: pendingEvents,
-      change: "1 needs attention",
       icon: "⏳",
     },
     {
       title: "Total Registrations",
       value: totalRegistrations,
-      change: "↑ 12% from last month",
       icon: "🎟️",
     },
     {
       title: "Total Earnings",
       value: `$${totalEarnings.toLocaleString()}`,
-      change: "↑ 8% from last month",
       icon: "💰",
     },
   ];
@@ -109,7 +105,7 @@ export default function OrganizerDashboard() {
     );
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 pb-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold">Event Dashboard</h1>
@@ -136,7 +132,6 @@ export default function OrganizerDashboard() {
               <SummaryCard
                 title={card.title}
                 value={card.value}
-                change={card.change}
                 icon={card.icon}
                 index={index}
               />
@@ -180,13 +175,11 @@ export default function OrganizerDashboard() {
 function SummaryCard({
   title,
   value,
-  change,
   icon,
   index,
 }: {
   title: string;
   value: string | number;
-  change: string;
   icon: string;
   index: number;
 }) {
@@ -208,7 +201,6 @@ function SummaryCard({
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground mt-1">{change}</p>
       </CardContent>
     </Card>
   );
@@ -268,26 +260,16 @@ function EventsTable({
           >
             <TableCell className="font-medium">
               <div className="flex items-center gap-3">
-                {event.bannerUrl && (
-                  <img
-                    src={event.bannerUrl}
-                    alt={event.title}
-                    className="w-10 h-10 rounded-md object-cover"
-                  />
-                )}
-                <div>
                   <div>{event.title}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {event.slug}
-                  </div>
-                </div>
               </div>
             </TableCell>
             <TableCell>{getStatusBadge(event.status)}</TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span>{event.location.address}</span>
+                 <span className="truncate max-w-[200px] overflow-hidden whitespace-nowrap text-sm text-muted-foreground">
+                  {event.location.address}
+                </span>
               </div>
             </TableCell>
             <TableCell>

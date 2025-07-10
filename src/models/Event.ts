@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from "mongoose";
 import User from "./User";
 
 export interface ITicketType {
+  _id: string | { toString(): string };
   name: string;
   price: number;
   isActive: boolean;
@@ -11,7 +12,7 @@ export interface ITicketType {
 
 export interface IEventLocation {
   type: "online" | "offline";
-  address?: string;
+  address : string;
   onlineUrl?: string;
 }
 
@@ -26,7 +27,7 @@ export interface IEvent extends Document {
   ticketTypes: ITicketType[];
   isPublic: boolean;
   status: "draft" | "pending" | "approved";
-  formConfig?: any;
+  formConfig?: unknown;
   bannerUrl?: string;
   brochureUrl?: string;
   speakerImages: string[];

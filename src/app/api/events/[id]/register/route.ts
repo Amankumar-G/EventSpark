@@ -89,10 +89,11 @@ export async function PUT(
     await event.save();
 
     return NextResponse.json({ success: true, booking: newBooking });
-  } catch (error: any) {
-    console.error("PUT /api/events/[id] error:", error);
+  } catch (error: unknown) {
+  const errorMessage =
+    error instanceof Error ? error.message : "An unexpected error occurred";
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: errorMessage},
       { status: 500 }
     );
   }

@@ -10,6 +10,7 @@ import { HeaderSection } from "./components/HeaderSection";
 import { FormStep } from "./components/FormStep";
 import { PaymentStep } from "./components/PaymentStep";
 
+
 const RegisterPage = () => {
   const { 
     eventName, 

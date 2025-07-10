@@ -14,9 +14,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 
   // ✅ Fetch attendees from Booking model
-  const bookings = await Booking.find({ eventId: id }).lean();
+  const bookings = await Booking.find({ event: id }).lean();
 
-  type AttendeeRow = { AttendeeID: string; [key: string]: any };
+  type AttendeeRow = { AttendeeID: string; [key: string]: unknown };
 
   const rows: AttendeeRow[] = bookings.map((booking) => ({
     AttendeeID: booking.attendeeId,

@@ -3,8 +3,9 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { MapPin, Globe } from "lucide-react";
+import {IEventLocation} from "@/models/Event"
 
-export const EventLocation = ({ location }: { location: any }) => (
+export const EventLocation = ({ location }: { location: IEventLocation }) => (
   <Card className="border-0 shadow-sm rounded-2xl">
     <CardHeader>
       <CardTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2">
@@ -40,7 +41,7 @@ export const EventLocation = ({ location }: { location: any }) => (
   </Card>
 );
 
-const OfflineLocation = ({ location }: { location: any }) => (
+const OfflineLocation = ({ location }: { location: IEventLocation }) => (
   <>
     <div className="rounded-xl overflow-hidden w-full h-64 border-2 border-gray-200">
       <iframe

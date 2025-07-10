@@ -29,9 +29,9 @@ export interface EventWithDetails {
   endDate: string | Date;
   location: EventLocation;
   // Use the defined TicketType for consistency, adding 'sold' as optional
-  ticketTypes: Array<TicketType & { sold?: number; _id?: string | { toString(): string } }>;
+  ticketTypes: Array<TicketType & { sold : number; _id?: string | { toString(): string } }>;
   isPublic?: boolean; // Optional as per your update
-  status: 'active' | 'pending' | 'draft' | 'cancelled';
+  status: 'approved' | 'pending' | 'draft' | 'cancelled';
   bannerUrl?: string; // Optional banner URL
   brochureUrl?: string; // Keeping this from previous version if still relevant
   speakerImages: string[]; // Array of image URLs
@@ -60,7 +60,7 @@ export type EventFormData = {
   bannerImage: File | null;
   brochureFile: File | null;
   speakerImages: File[]; 
-  formConfig?: any;
+  formConfig?: string | null;
 };
 
 // Props for the Create/Edit Event Modal
