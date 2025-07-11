@@ -21,7 +21,7 @@ interface IEventSidebarProps {
   endDate: string | Date;
   location: IEventLocation;
   organizer: {
-    name?: string;
+    firstName?: string;
     email: string;
   };
   category: string;
@@ -82,7 +82,7 @@ export const EventSidebar = ({
         <DetailItem
           icon={<User className="h-5 w-5 text-[#FF6B6B]" />}
           label="Organizer"
-          value={organizer.name || organizer.email}
+          value={organizer.firstName || organizer.email}
         />
 
         <DetailItem
@@ -124,7 +124,7 @@ export const EventSidebar = ({
                 <p className="text-sm text-gray-500">{ticket.sold} sold</p>
               </div>
               <p className="font-medium text-gray-800">
-                ${ticket.price.toLocaleString()}
+                ₹{ticket.price.toLocaleString()}
               </p>
             </div>
           ))}

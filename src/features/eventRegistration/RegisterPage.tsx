@@ -10,20 +10,20 @@ import { HeaderSection } from "./components/HeaderSection";
 import { FormStep } from "./components/FormStep";
 import { PaymentStep } from "./components/PaymentStep";
 
-
 const RegisterPage = () => {
-  const { 
-    eventName, 
-    eventId, 
-    eventSlug, 
-    jsonStringConfig, 
-    ticketTypes, 
-    loading 
+  const {
+    eventName,
+    eventId,
+    eventSlug,
+    jsonStringConfig,
+    ticketTypes,
+    loading,
   } = useEventDetails();
-  
+
   const [formData, setFormData] = useState<any>(null);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState("");
+  const [loadingTicket, setLoadingTicket] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
 
   const handleFormSubmit = (data: any) => {
@@ -32,23 +32,33 @@ const RegisterPage = () => {
   };
 
   const handleStartPayment = async (index: string) => {
+    const selectedTicket = ticketTypes.find((ticket) => ticket._id === index);
+    if (!selectedTicket) return;
+
+    setSelectedTicketId(index);
+    setLoadingTicket(true); // 🟡 Start loader
+
+    if (selectedTicket.price === 0) {
+      setClientSecret("");
+      setLoadingTicket(false); // ✅ End loader
+      return;
+    }
+
     try {
       const res = await fetch(`/api/events/${eventId}/payment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          formData,
-          ticketTypeId: index,
-        }),
+        body: JSON.stringify({ formData, ticketTypeId: index }),
       });
 
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Payment initiation failed");
 
       setClientSecret(result.clientSecret);
-      setSelectedTicketId(index);
     } catch (err) {
       console.error("❌ Payment Intent error:", err);
+    } finally {
+      setLoadingTicket(false); // ✅ End loader
     }
   };
 
@@ -67,16 +77,12 @@ const RegisterPage = () => {
         variants={slideUp}
         className="space-y-8"
       >
-        <HeaderSection 
-          eventName={eventName} 
-          step={step} 
-          onBack={handleBack} 
-        />
+        <HeaderSection eventName={eventName} step={step} onBack={handleBack} />
 
         {step === 1 ? (
-          <FormStep 
-            jsonStringConfig={jsonStringConfig} 
-            onSubmit={handleFormSubmit} 
+          <FormStep
+            jsonStringConfig={jsonStringConfig}
+            onSubmit={handleFormSubmit}
           />
         ) : (
           <PaymentStep
@@ -87,6 +93,7 @@ const RegisterPage = () => {
             clientSecret={clientSecret}
             eventSlug={eventSlug}
             onSelectTicket={handleStartPayment}
+            loadingTicket={loadingTicket} // 🆕
           />
         )}
       </motion.div>

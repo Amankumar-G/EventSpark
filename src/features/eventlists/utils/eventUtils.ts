@@ -27,5 +27,5 @@ export const getCheapestTicketPrice = (
   const activeTickets = ticketTypes.filter((t) => t.isActive);
   if (activeTickets.length === 0) return "N/A";
   const minPrice = Math.min(...activeTickets.map((t) => t.price));
-  return minPrice === 0 ? "Free" : `$${minPrice.toLocaleString()}`;
+  return minPrice === 0 ? "Free" : `₹${minPrice.toLocaleString()}`;
 };

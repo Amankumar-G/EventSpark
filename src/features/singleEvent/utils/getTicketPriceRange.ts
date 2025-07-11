@@ -14,6 +14,6 @@ export const getTicketPriceRange = (
   const maxPrice = Math.max(...activePrices);
 
   if (minPrice === 0) return "Free";
-  if (minPrice === maxPrice) return `$${minPrice.toLocaleString()}`;
-  return `$${minPrice.toLocaleString()} - $${maxPrice.toLocaleString()}`;
+  if (minPrice === maxPrice) return `₹${minPrice.toLocaleString()}`;
+  return `₹${minPrice.toLocaleString()} - ₹${maxPrice.toLocaleString()}`;
 };

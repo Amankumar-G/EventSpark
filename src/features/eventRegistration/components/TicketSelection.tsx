@@ -1,16 +1,24 @@
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { TicketCard } from "./TicketCard";
 
 interface TicketSelectionProps {
   ticketTypes: any[];
   selectedTicketType: string | null;
   onSelectTicket: (index: string) => void;
+  loadingTicket: boolean; // 🆕
 }
 
 export const TicketSelection = ({
   ticketTypes,
   selectedTicketType,
   onSelectTicket,
+  loadingTicket,
 }: TicketSelectionProps) => (
   <Card className="border-0 shadow-sm rounded-xl overflow-hidden">
     <CardHeader className="bg-gradient-to-r from-[#FF6B6B] to-[#e55f5f] p-6 text-white">
@@ -30,8 +38,9 @@ export const TicketSelection = ({
             key={index}
             ticket={ticket}
             isSelected={selectedTicketType === ticket._id}
+            isLoading={loadingTicket && selectedTicketType === ticket._id} // 🆕
             onClick={() => onSelectTicket(ticket._id)}
-          /> 
+          />
         ))
       )}
     </CardContent>

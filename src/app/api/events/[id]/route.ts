@@ -46,14 +46,16 @@ export async function GET(
       );
     }
 
-    const event = await Event.findOne({ slug: id }).lean<IEvent>();
+    const event = await Event.findOne({ slug: id })
+      .populate("organizer")
+      .lean<IEvent>();
+
     if (!event) {
       return NextResponse.json(
         { success: false, error: "Event not found" },
         { status: 404 }
       );
     }
-
     // ✅ Replaced old logic that checked Event.attendees with Booking query
     const existingBooking = await Booking.findOne({
       event: event._id,
@@ -201,7 +203,7 @@ export async function DELETE(
 ) {
   try {
     await connect();
-   const { id } = await context.params;
+    const { id } = await context.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
