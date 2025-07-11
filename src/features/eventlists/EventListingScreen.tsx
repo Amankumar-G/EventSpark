@@ -102,7 +102,27 @@ export default function EventListingScreen() {
     }
 
     if (activeTab !== "all") {
-      result = result.filter((event) => event.status === activeTab);
+      const now = new Date();
+
+      result = result.filter((event) => {
+        const startDate = new Date(event.startDate);
+
+        if (activeTab === "active") {
+          return startDate.toDateString() === now.toDateString();
+        }
+
+        if (activeTab === "upcoming") {
+          return startDate > now;
+        }
+
+        if (activeTab === "past") {
+          return (
+            startDate < now && startDate.toDateString() !== now.toDateString()
+          );
+        }
+
+        return true;
+      });
     }
 
     setFilteredEvents(result);
@@ -232,9 +252,7 @@ export default function EventListingScreen() {
       </div>
 
       {/* CTA Section */}
-      {!isLoading && filteredEvents.length > 0 && (
-        <CTASection />
-      )}
+      {!isLoading && filteredEvents.length > 0 && <CTASection />}
     </div>
   );
 }
