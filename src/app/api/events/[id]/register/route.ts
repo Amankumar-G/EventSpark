@@ -1,18 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connect } from "@/dbConfig/dbConfig";
 import Event from "@/models/Event";
-import Booking from "@/models/Booking"; // ✅ New
+import Booking from "@/models/Booking";
 import mongoose from "mongoose";
 import { auth } from "@clerk/nextjs/server";
-
-// await fetch(`/api/events/${eventId}/register`, {
-//   method: 'PUT',
-//   headers: { 'Content-Type': 'application/json' },
-//   body: JSON.stringify({
-//     ticketTypeIndex,
-//     ...formData, // user details
-//   }),
-// });
 
 export async function PUT(
   req: NextRequest,
@@ -21,7 +12,7 @@ export async function PUT(
   try {
     await connect();
 
- const { id } = await context.params;
+    const { id } = await context.params;
     const { userId } = await auth();
 
     if (!userId) {
@@ -36,18 +27,19 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { ticketTypeIndex, ...formData } = body;
-    if (typeof ticketTypeIndex !== "number") {
+    const { ticketTypeId, ...formData } = body;
+
+    if (!ticketTypeId || typeof ticketTypeId !== "string") {
       return NextResponse.json(
-        { error: "Missing or invalid ticketTypeIndex" },
+        { error: "Missing or invalid ticketTypeId" },
         { status: 400 }
       );
     }
 
-    // Check if user already booked
+    // ✅ Check for existing booking
     const existingBooking = await Booking.findOne({
-      eventId: id,
-      attendeeId: userId,
+      event: id,
+      userId,
     });
 
     if (existingBooking) {
@@ -57,43 +49,53 @@ export async function PUT(
       );
     }
 
-    // Validate ticket index
+    // ✅ Fetch event and validate ticketTypeId
     const event = await Event.findById(id);
     if (!event) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
 
-    if (
-      !Array.isArray(event.ticketTypes) ||
-      ticketTypeIndex < 0 ||
-      ticketTypeIndex >= event.ticketTypes.length
-    ) {
+    const ticketIndex = event.ticketTypes.findIndex(
+      (ticket: any) => ticket._id.toString() === ticketTypeId
+    );
+
+    if (ticketIndex === -1) {
       return NextResponse.json(
-        { error: "Invalid ticket type index" },
+        { error: "Ticket type not found" },
         { status: 400 }
       );
     }
 
-    // Create booking
+    const ticket = event.ticketTypes[ticketIndex];
+
+    if (!ticket.isActive) {
+      return NextResponse.json(
+        { error: "Ticket type is inactive" },
+        { status: 400 }
+      );
+    }
+
+    // ✅ Create booking
     const newBooking = new Booking({
       event: event._id,
       userId,
-      ticketTypeIndex,
+      ticketTypeId,
       formData,
     });
 
     await newBooking.save();
 
-    // Increment sold count
-    event.ticketTypes[ticketTypeIndex].sold += 1;
+    // ✅ Increment ticket sold count
+    event.ticketTypes[ticketIndex].sold += 1;
     await event.save();
 
     return NextResponse.json({ success: true, booking: newBooking });
   } catch (error: unknown) {
-  const errorMessage =
-    error instanceof Error ? error.message : "An unexpected error occurred";
+    const errorMessage =
+      error instanceof Error ? error.message : "An unexpected error occurred";
+
     return NextResponse.json(
-      { success: false, error: errorMessage},
+      { success: false, error: errorMessage },
       { status: 500 }
     );
   }

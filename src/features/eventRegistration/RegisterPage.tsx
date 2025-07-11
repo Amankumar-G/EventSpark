@@ -22,7 +22,7 @@ const RegisterPage = () => {
   } = useEventDetails();
   
   const [formData, setFormData] = useState<any>(null);
-  const [selectedTicketType, setSelectedTicketType] = useState<number | null>(null);
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState("");
   const [step, setStep] = useState<1 | 2>(1);
 
@@ -31,14 +31,14 @@ const RegisterPage = () => {
     setStep(2);
   };
 
-  const handleStartPayment = async (index: number) => {
+  const handleStartPayment = async (index: string) => {
     try {
       const res = await fetch(`/api/events/${eventId}/payment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           formData,
-          ticketTypeIndex: index,
+          ticketTypeId: index,
         }),
       });
 
@@ -46,7 +46,7 @@ const RegisterPage = () => {
       if (!res.ok) throw new Error(result.error || "Payment initiation failed");
 
       setClientSecret(result.clientSecret);
-      setSelectedTicketType(index);
+      setSelectedTicketId(index);
     } catch (err) {
       console.error("❌ Payment Intent error:", err);
     }
@@ -83,7 +83,7 @@ const RegisterPage = () => {
             eventId={eventId}
             formData={formData}
             ticketTypes={ticketTypes}
-            selectedTicketType={selectedTicketType}
+            selectedTicketType={selectedTicketId}
             clientSecret={clientSecret}
             eventSlug={eventSlug}
             onSelectTicket={handleStartPayment}

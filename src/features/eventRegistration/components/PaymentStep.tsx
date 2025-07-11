@@ -13,10 +13,10 @@ interface PaymentStepProps {
   eventId: string;
   formData: any;
   ticketTypes: any[];
-  selectedTicketType: number | null;
+  selectedTicketType: string | null;
   clientSecret: string;
   eventSlug: string;
-  onSelectTicket: (index: number) => void;
+  onSelectTicket: (index: string) => void;
 }
 
 export const PaymentStep = ({

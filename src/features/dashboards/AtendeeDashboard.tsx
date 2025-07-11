@@ -45,7 +45,9 @@ const BookingDetailsModal = ({
   onOpenChange: (open: boolean) => void;
 }) => {
   const event = booking.event;
-  const ticketType = event.ticketTypes[booking.ticketTypeIndex];
+  const ticketType = event.ticketTypes.find(
+  (ticket) => ticket._id.toString() === booking.ticketTypeId
+);
   const createdAt = new Date(booking.createdAt);
   const eventDate = new Date(event.startDate);
 
@@ -90,9 +92,9 @@ const BookingDetailsModal = ({
                 <Ticket className="text-muted-foreground mt-1 h-5 w-5" />
                 <div>
                   <p className="text-sm text-muted-foreground">Ticket Type</p>
-                  <p className="text-lg font-medium">{ticketType.name}</p>
+                  <p className="text-lg font-medium">{ticketType?.name ?? "Unknown Ticket"}</p>
                   <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-                    ₹{ticketType.price}
+                    ₹{ticketType?.price ?? "N/A"}
                   </p>
                 </div>
               </div>
@@ -136,7 +138,7 @@ const BookingDetailsModal = ({
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Amount Paid</p>
                   <p className="font-semibold text-emerald-600 dark:text-emerald-400">
-                    ₹{ticketType.price}
+                    ₹{ticketType?.price ?? "N/A"}
                   </p>
                 </div>
               </div>
@@ -371,7 +373,9 @@ const BookingCard = ({
 }) => {
   const router = useRouter();
   const event = booking.event;
-  const ticketType = event.ticketTypes[booking.ticketTypeIndex];
+ const ticketType = event.ticketTypes.find(
+  (ticket) => ticket._id.toString() === booking.ticketTypeId
+);
   const createdAt = new Date(booking.createdAt);
   const eventDate = new Date(booking.event.startDate || createdAt);
 
@@ -445,7 +449,7 @@ const BookingCard = ({
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Ticket</p>
-                      <p className="font-medium">{ticketType.name}</p>
+                      <p className="font-medium">{ticketType?.name ?? "Unknown Ticket"}</p>
                     </div>
                   </div>
                 </div>
@@ -459,7 +463,7 @@ const BookingCard = ({
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Amount</p>
-                      <p className="font-medium">₹{ticketType.price}</p>
+                      <p className="font-medium">₹{ticketType?.price ?? "N/A"}</p>
                     </div>
                   </div>
 

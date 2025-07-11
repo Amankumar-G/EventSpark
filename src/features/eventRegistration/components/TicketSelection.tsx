@@ -3,8 +3,8 @@ import { TicketCard } from "./TicketCard";
 
 interface TicketSelectionProps {
   ticketTypes: any[];
-  selectedTicketType: number | null;
-  onSelectTicket: (index: number) => void;
+  selectedTicketType: string | null;
+  onSelectTicket: (index: string) => void;
 }
 
 export const TicketSelection = ({
@@ -29,9 +29,9 @@ export const TicketSelection = ({
           <TicketCard
             key={index}
             ticket={ticket}
-            isSelected={selectedTicketType === index}
-            onClick={() => onSelectTicket(index)}
-          />
+            isSelected={selectedTicketType === ticket._id}
+            onClick={() => onSelectTicket(ticket._id)}
+          /> 
         ))
       )}
     </CardContent>

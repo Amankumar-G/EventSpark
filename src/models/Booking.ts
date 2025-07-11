@@ -4,21 +4,22 @@ import Event from "./Event";
 
 export interface IBooking extends Document {
   event: string | { toString(): string };
-  userId: string; // Clerk ID or Mongo ID
+  userId: string;
   formData: Record<string, unknown>;
-  ticketTypeIndex: number;
+  ticketTypeId: string; // <-- Changed from index to ID
   paymentIntentId: string;
-  // status: "pending" | "paid" | "cancelled";
   createdAt: Date;
 }
 
-const BookingSchema = new Schema<IBooking>({
-  event: { type: Schema.Types.ObjectId,   ref: Event.modelName, required: true },
-  userId: { type: String, required: true },
-  formData: { type: Schema.Types.Mixed, required: true },
-  ticketTypeIndex: { type: Number, required: true },
-  paymentIntentId: { type: String },
-  // status: { type: String, enum: ["pending", "paid", "cancelled"], default: "pending" },
-}, { timestamps: true });
+const BookingSchema = new Schema<IBooking>(
+  {
+    event: { type: Schema.Types.ObjectId, ref: Event.modelName, required: true },
+    userId: { type: String, required: true },
+    formData: { type: Schema.Types.Mixed, required: true },
+    ticketTypeId: { type: String, required: true }, // <-- Changed from Number to String
+    paymentIntentId: { type: String },
+  },
+  { timestamps: true }
+);
 
 export default mongoose.models.Booking || mongoose.model<IBooking>("Booking", BookingSchema);

@@ -55,9 +55,7 @@ export default function TicketsTab({
                 className="h-10 focus-visible:ring-[#468FAF]"
               />
               {errors.ticketTypes?.[index]?.name && (
-                <p className="text-sm text-red-500">
-                  Ticket name is required
-                </p>
+                <p className="text-sm text-red-500">Ticket name is required</p>
               )}
             </div>
 
@@ -67,19 +65,19 @@ export default function TicketsTab({
                 placeholder="Price"
                 type="number"
                 {...register(`ticketTypes.${index}.price`, {
-                  required: true,
+                  required: "Price is required",
                   valueAsNumber: true,
-                  min: {
-                    value: 0,
-                    message: "Price cannot be negative",
+                  validate: (value) => {
+                    if (value === 0) return true; // Allow 0
+                    if (value >= 50) return true; // Allow 50 and up
+                    return "Price must be 0 or at least ₹50";
                   },
                 })}
                 className="h-10 focus-visible:ring-[#468FAF]"
               />
               {errors.ticketTypes?.[index]?.price && (
                 <p className="text-sm text-red-500">
-                  {errors.ticketTypes[index]?.price?.message ||
-                    "Price is required"}
+                  {errors.ticketTypes[index]?.price?.message}
                 </p>
               )}
             </div>

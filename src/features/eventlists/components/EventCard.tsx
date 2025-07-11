@@ -30,9 +30,6 @@ export const EventCard = ({ event }: { event: EventWithDetails }) => {
             {event.title}
           </div>
         )}
-        <Badge className="absolute top-3 right-3 bg-white text-gray-800 shadow-sm">
-          {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-        </Badge>
       </div>
 
       <CardContent className="p-6 flex-grow flex flex-col">

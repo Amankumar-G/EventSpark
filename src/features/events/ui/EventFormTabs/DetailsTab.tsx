@@ -44,7 +44,9 @@ export default function DetailsTab({
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [speakerPreviews, setSpeakerPreviews] = useState<string[]>([]);
   const [brochurePreview, setBrochurePreview] = useState<boolean>(false);
-  const [formBuilderConfig, setFormBuilderConfig] = useState<string | null>(null);
+  const [formBuilderConfig, setFormBuilderConfig] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -56,6 +58,12 @@ export default function DetailsTab({
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [setValue]);
+
+  useEffect(() => {
+    register("formConfig", {
+      required: "Form builder configuration is required",
+    });
+  }, [register]);
 
   const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -319,6 +327,10 @@ export default function DetailsTab({
             ✅ Custom form added successfully!
           </p>
         )}
+        {errors.formConfig && (
+          <p className="text-sm text-red-500">{errors.formConfig.message}</p>
+        )}
+
         <p className="text-sm text-muted-foreground">
           Select form fields for attendees to fill out, then click{" "}
           <strong>Publish</strong> to confirm and save the form.

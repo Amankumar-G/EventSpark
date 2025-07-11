@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { connect } from "@/dbConfig/dbConfig";
 import Event from "@/models/Event";
-import Booking from "@/models/Booking"; // ✅ New Booking model
+import Booking from "@/models/Booking";
 import { auth } from "@clerk/nextjs/server";
 import mongoose from "mongoose";
 
@@ -29,21 +29,24 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { formData, ticketTypeIndex } = body;
+    const { formData, ticketTypeId } = body;
 
-    // Validate ticket
-    const ticket = event.ticketTypes[ticketTypeIndex];
+    // ✅ Validate ticketTypeId
+    const ticket = event.ticketTypes.find(
+      (t: any) => t._id.toString() === ticketTypeId
+    );
+
     if (!ticket || !ticket.isActive) {
       return NextResponse.json(
-        { error: "Invalid or inactive ticket" },
+        { error: "Invalid or inactive ticket type" },
         { status: 400 }
       );
     }
 
-    // ✅ Check in Booking model instead of Event.attendees
+    // ✅ Check for existing booking
     const existingBooking = await Booking.findOne({
-      eventId: event._id,
-      attendeeId: userId,
+      event: event._id,
+      userId,
     });
 
     if (existingBooking) {
@@ -55,12 +58,12 @@ export async function POST(
 
     // ✅ Create Stripe PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: ticket.price * 100, // convert to paisa
+      amount: ticket.price * 100, // in paisa
       currency: "inr",
       metadata: {
         eventId: event._id.toString(),
         userId,
-        ticketTypeIndex: ticketTypeIndex.toString(),
+        ticketTypeId: ticketTypeId,
         attendeeFormData: JSON.stringify(formData),
       },
       automatic_payment_methods: {
