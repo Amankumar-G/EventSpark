@@ -252,7 +252,7 @@ export default function EventListingScreen() {
       </div>
 
       {/* CTA Section */}
-      {!isLoading && filteredEvents.length > 0 && <CTASection />}
+      {/* {!isLoading && filteredEvents.length > 0 && <CTASection />} */}
     </div>
   );
 }
