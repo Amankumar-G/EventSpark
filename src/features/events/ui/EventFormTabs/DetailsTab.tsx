@@ -21,7 +21,7 @@ import {
 } from "react-hook-form";
 import { EventFormData } from "../../types/event";
 import { useState, useRef, useEffect } from "react";
-
+import Image from "next/image";
 type Props = {
   control: Control<EventFormData>;
   register: UseFormRegister<EventFormData>;
@@ -183,7 +183,7 @@ export default function DetailsTab({
           </Button>
           {bannerPreview && (
             <div className="relative">
-              <img
+              <Image
                 src={bannerPreview}
                 alt="Banner preview"
                 className="h-20 w-32 object-cover rounded-md"
@@ -227,7 +227,7 @@ export default function DetailsTab({
           </Button>
           {speakerPreviews.map((preview, index) => (
             <div key={index} className="relative">
-              <img
+              <Image
                 src={preview}
                 alt={`Speaker ${index + 1}`}
                 className="h-20 w-20 object-cover rounded-md"

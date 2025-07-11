@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
     const bookings = await Booking.find({ userId }).populate({
       path: "event",
-      select: "title date location slug ticketTypes bannerUrl", 
+      select: "title date location slug ticketTypes bannerUrl startDate", 
     });
 
     return NextResponse.json({ success: true, bookings });

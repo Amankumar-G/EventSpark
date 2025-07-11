@@ -27,6 +27,151 @@ import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IBooking } from "@/models/Booking";
 import { IEvent } from "@/models/Event";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+
+const BookingDetailsModal = ({
+  booking,
+  open,
+  onOpenChange,
+}: {
+  booking: BookingWithEvent;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) => {
+  const event = booking.event;
+  const ticketType = event.ticketTypes[booking.ticketTypeIndex];
+  const createdAt = new Date(booking.createdAt);
+  const eventDate = new Date(event.startDate);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl p-0 overflow-hidden rounded-lg">
+        <div className="grid grid-cols-1 lg:grid-cols-5">
+          {/* Left Side - Event Summary */}
+          <div className="lg:col-span-2 bg-gradient-to-br from-primary/10 to-indigo-500/10 p-6 space-y-6">
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Event</p>
+                <h2 className="text-2xl font-bold">{event.title}</h2>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Calendar className="text-muted-foreground mt-1 h-5 w-5" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Date & Time</p>
+                  <p className="text-lg font-medium">
+                    {format(eventDate, "MMMM dd, yyyy")}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {format(eventDate, "h:mm a")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <MapPin className="text-muted-foreground mt-1 h-5 w-5" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Location</p>
+                  <p className="text-lg font-medium">
+                    {event.location.type === "online"
+                      ? "Online Event"
+                      : event.location.address}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Ticket className="text-muted-foreground mt-1 h-5 w-5" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Ticket Type</p>
+                  <p className="text-lg font-medium">{ticketType.name}</p>
+                  <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                    ₹{ticketType.price}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side - Booking Details */}
+          <div className="lg:col-span-3 p-6 space-y-6">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold">
+                Booking Confirmation
+              </DialogTitle>
+              <DialogDescription>
+                Here are the details of your registration
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Booking ID</p>
+                  <p className="font-medium font-mono">
+                    {booking._id.slice(-8).toUpperCase()}
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Booked On</p>
+                  <p className="font-medium">
+                    {format(createdAt, "MMMM do, yyyy 'at' h:mm a")}
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <Badge variant="default" className="text-sm">
+                    Confirmed
+                  </Badge>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Amount Paid</p>
+                  <p className="font-semibold text-emerald-600 dark:text-emerald-400">
+                    ₹{ticketType.price}
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <h3 className="text-lg font-semibold mb-4">
+                  Attendee Information
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(booking.formData).map(([key, value]) => (
+                    <div key={key} className="space-y-1">
+                      <p className="text-sm text-muted-foreground capitalize">
+                        {key.replace(/([A-Z])/g, ' $1').trim()}
+                      </p>
+                      <p className="font-medium">
+                        {typeof value === "string" || typeof value === "number"
+                          ? value
+                          : JSON.stringify(value)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 flex justify-end">
+              <Button onClick={() => onOpenChange(false)}>Close</Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 interface BookingWithEvent extends Omit<IBooking, "event"> {
   _id: string;
@@ -62,6 +207,8 @@ const BookingsPage = () => {
   const [bookings, setBookings] = useState<BookingWithEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedBooking, setSelectedBooking] =
+    useState<BookingWithEvent | null>(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -74,7 +221,7 @@ const BookingsPage = () => {
         }
 
         const data = await response.json();
-
+        console.log(data);
         if (data.success) {
           setBookings(data.bookings);
         } else {
@@ -168,6 +315,13 @@ const BookingsPage = () => {
 
   return (
     <div className="container mx-auto px-4 pb-8">
+       {selectedBooking && (
+          <BookingDetailsModal
+            booking={selectedBooking}
+            open={!!selectedBooking}
+            onOpenChange={(open) => !open && setSelectedBooking(null)}
+          />
+        )}
       <motion.div
         initial="hidden"
         animate="visible"
@@ -195,7 +349,10 @@ const BookingsPage = () => {
                 whileHover={{ scale: 1.01 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
-                <BookingCard booking={booking} />
+                <BookingCard
+                  booking={booking}
+                  setSelectedBooking={setSelectedBooking}
+                />
               </motion.div>
             ))}
           </AnimatePresence>
@@ -205,15 +362,21 @@ const BookingsPage = () => {
   );
 };
 
-const BookingCard = ({ booking }: { booking: BookingWithEvent }) => {
+const BookingCard = ({
+  booking,
+  setSelectedBooking,
+}: {
+  booking: BookingWithEvent;
+  setSelectedBooking: (booking: BookingWithEvent) => void;
+}) => {
   const router = useRouter();
   const event = booking.event;
   const ticketType = event.ticketTypes[booking.ticketTypeIndex];
   const createdAt = new Date(booking.createdAt);
-  const eventDate = new Date(booking.event.startDate || createdAt); // Fallback to created date if event date not available
+  const eventDate = new Date(booking.event.startDate || createdAt);
 
   const handleViewDetails = () => {
-    router.push(`/bookings/${event.slug}`);
+    setSelectedBooking(booking);
   };
 
   const handleViewEvent = () => {

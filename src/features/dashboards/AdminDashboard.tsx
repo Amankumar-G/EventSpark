@@ -131,7 +131,7 @@ export default function AdminDashboard() {
     },
     {
       title: "Total Earnings",
-      value: `$${totalEarnings.toLocaleString()}`,
+      value: `₹${totalEarnings.toLocaleString()}`,
       icon: "💰",
     },
   ];
@@ -256,7 +256,7 @@ export default function AdminDashboard() {
         <YAxis />
         <Tooltip 
           formatter={(value, name) => 
-            name === 'sales' ? [value, 'Tickets Sold'] : [`$${value}`, 'Revenue']
+            name === 'sales' ? [value, 'Tickets Sold'] : [`₹${value}`, 'Revenue']
           }
         />
         <Legend />
@@ -289,7 +289,7 @@ export default function AdminDashboard() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`$${value}`, "Earnings"]} />
+                <Tooltip formatter={(value) => [`₹${value}`, "Earnings"]} />
                 <Line
                   type="monotone"
                   dataKey="earnings"
@@ -513,7 +513,7 @@ function AdminEventsTable({
               </div>
             </TableCell>
             <TableCell>
-              ${getCheapestTicketPrice(event.ticketTypes).toLocaleString()}
+              ₹{getCheapestTicketPrice(event.ticketTypes).toLocaleString()}
               {event.ticketTypes.length > 1 && "+"}
             </TableCell>
             <TableCell className="flex justify-end gap-2">

@@ -87,7 +87,7 @@ export default function OrganizerDashboard() {
     },
     {
       title: "Total Earnings",
-      value: `$${totalEarnings.toLocaleString()}`,
+      value: `₹${totalEarnings.toLocaleString()}`,
       icon: "💰",
     },
   ];
@@ -290,7 +290,7 @@ function EventsTable({
               </div>
             </TableCell>
             <TableCell>
-              ${getCheapestTicketPrice(event.ticketTypes).toLocaleString()}
+              ₹{getCheapestTicketPrice(event.ticketTypes).toLocaleString()}
               {event.ticketTypes.length > 1 && "+"}
             </TableCell>
             <TableCell className="flex justify-end gap-2">
