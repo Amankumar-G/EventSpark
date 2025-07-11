@@ -31,13 +31,13 @@ const streamUpload = (file: File, folder: string): Promise<string> => {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connect();
 
     const { userId: clerkId } = await auth();
-    const { id } = await params;
+    const { id } = await context.params;
 
     if (!id) {
       return NextResponse.json(
@@ -80,11 +80,11 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connect();
-    const { id } = await params;
+    const { id } = await context.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
@@ -197,11 +197,11 @@ export async function PUT(
 
 export async function DELETE(
   _: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connect();
-    const { id } = await params;
+   const { id } = await context.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(

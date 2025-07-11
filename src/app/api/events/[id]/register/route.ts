@@ -16,12 +16,12 @@ import { auth } from "@clerk/nextjs/server";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connect();
 
-    const { id } = await params;
+ const { id } = await context.params;
     const { userId } = await auth();
 
     if (!userId) {

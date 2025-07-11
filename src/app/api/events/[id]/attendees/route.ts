@@ -4,9 +4,9 @@ import { connect } from '@/dbConfig/dbConfig';
 import Event from "@/models/Event";
 import Booking from "@/models/Booking"; // ✅ Use new Booking model
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   await connect();
-  const { id } =await params;
+  const { id } =await context.params;
 
   const event = await Event.findById(id);
   if (!event) {

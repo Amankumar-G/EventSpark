@@ -3,10 +3,13 @@ import { connect } from '@/dbConfig/dbConfig';
 import Event from '@/models/Event';
 import mongoose from 'mongoose';
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
     await connect();
-    const { id } = await params;
+    const { id } = await context.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ success: false, error: 'Invalid ID' }, { status: 400 });

@@ -1,5 +1,7 @@
 // types/globals.ts
 
+import { IEventLocation, ITicketType } from "@/models/Event";
+
 export interface EventLocation {
   type: string;
   address: string;
@@ -27,9 +29,9 @@ export interface EventWithDetails {
   // Dates can be string (ISO) or Date objects for flexibility
   startDate: string | Date;
   endDate: string | Date;
-  location: EventLocation;
+  location: IEventLocation;
   // Use the defined TicketType for consistency, adding 'sold' as optional
-  ticketTypes: Array<TicketType & { sold : number; _id?: string | { toString(): string } }>;
+  ticketTypes: Array<ITicketType & { sold : number; _id?: string | { toString(): string } }>;
   isPublic?: boolean; // Optional as per your update
   status: 'approved' | 'pending' | 'draft' | 'cancelled';
   bannerUrl?: string; // Optional banner URL
