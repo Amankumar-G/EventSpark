@@ -34,10 +34,9 @@ const cardHover = {
 
 export default function OrganizerDashboard() {
   const { user } = useUser();
-  const { events, isLoading, error, refetch } = useFetchOrganizerEvents(
+  const { events,totalAmount, isLoading, error, refetch } = useFetchOrganizerEvents(
     user?.id
   );
-
   const activeEvents = events?.filter((e) => e.status === "approved").length || 0;
 
   const pendingEvents =
@@ -56,18 +55,6 @@ export default function OrganizerDashboard() {
       );
     }, 0) || 0;
 
-  const totalEarnings =
-    events?.reduce((sum: number, event: EventWithDetails) => {
-      return (
-        sum +
-        event.ticketTypes.reduce(
-          (tSum: number, ticket: TicketType & { sold?: number }) => {
-            return tSum + (ticket.sold || 0) * ticket.price;
-          },
-          0
-        )
-      );
-    }, 0) || 0;
 
   const summaryCards = [
     {
@@ -87,7 +74,7 @@ export default function OrganizerDashboard() {
     },
     {
       title: "Total Earnings",
-      value: `₹${totalEarnings.toLocaleString()}`,
+      value: `₹ ${totalAmount?.toLocaleString()}`,
       icon: "💰",
     },
   ];

@@ -55,10 +55,10 @@ export async function POST(
         { status: 400 }
       );
     }
-
+    const amount = parseFloat((ticket.price * 1.05).toFixed(2));
     // ✅ Create Stripe PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: ticket.price * 100, // in paisa
+      amount: amount * 100, // in paisa
       currency: "inr",
       metadata: {
         eventId: event._id.toString(),

@@ -8,6 +8,7 @@ export interface IUser extends Document {
   role: 'admin' | 'organizer' | 'attendee';
   profileImage?: string;
   isActive: boolean;
+  totalAmount: number; // Income or Spending based on role
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,6 +52,12 @@ const UserSchema = new Schema<IUser>(
       type: Boolean,
       default: true,
       index: true,
+    },
+    totalAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+      description: 'Income for organizers/admins, spending for attendees',
     },
   },
   {

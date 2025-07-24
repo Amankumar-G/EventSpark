@@ -75,4 +75,5 @@ export type CreateEventModalProps = {
 export type EventsApiResponse = {
   success: boolean
   events: EventWithDetails[]
+  totalAmount : number
 }

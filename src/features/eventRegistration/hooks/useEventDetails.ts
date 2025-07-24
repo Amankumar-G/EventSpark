@@ -31,10 +31,13 @@ export const useEventDetails = (): EventDetails => {
         const data = await res.json();
         const event = data.event;
 
-        // Filter only active tickets
-        const activeTickets = (event.ticketTypes || []).filter(
-          (ticket: any) => ticket.isActive
-        );
+        // Filter only active tickets and increase price by 5%
+        const activeTickets = (event.ticketTypes || [])
+          .filter((ticket: any) => ticket.isActive)
+          .map((ticket: any) => ({
+            ...ticket,
+            price: parseFloat((ticket.price * 1.05).toFixed(2)),
+          }));
 
         let finalConfig = event?.formConfig || "";
         if (finalConfig && typeof finalConfig === "string") {
@@ -51,7 +54,7 @@ export const useEventDetails = (): EventDetails => {
         });
       } catch (err) {
         console.error("Failed to fetch event:", err);
-        setState(prev => ({ ...prev, loading: false }));
+        setState((prev) => ({ ...prev, loading: false }));
       }
     };
 

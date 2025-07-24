@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Calendar } from "@/components/ui/calendar";
 import { useEffect, useState } from "react";
+import { useRoleAuth } from "@/features/auth/hooks/useRoleAuth";
 
 export function Hero() {
   const [hasMounted, setHasMounted] = useState(false);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
-
+  const { hasRequiredRole, isLoaded } = useRoleAuth("organizer");
   useEffect(() => {
     setHasMounted(true);
     setSelectedDates([

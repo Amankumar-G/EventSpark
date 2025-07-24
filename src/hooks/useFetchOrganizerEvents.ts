@@ -5,7 +5,7 @@ export function useFetchOrganizerEvents(organizerId?: string) {
   const [events, setEvents] = useState<EventWithDetails[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
-
+  const [totalAmount, setTotalAmount] = useState(0)
   const fetchEvents = useCallback(async () => {
     if (!organizerId) return
 
@@ -14,7 +14,9 @@ export function useFetchOrganizerEvents(organizerId?: string) {
       const response = await fetch(`/api/events`)
       const data: EventsApiResponse = await response.json()
       if (data.success) {
+        console.log(data)
         setEvents(data.events)
+        setTotalAmount(data.totalAmount)
         setError(null)
       } else {
         throw new Error('Failed to fetch events')
@@ -30,5 +32,5 @@ export function useFetchOrganizerEvents(organizerId?: string) {
     fetchEvents()
   }, [fetchEvents])
 
-  return { events, isLoading, error, refetch: fetchEvents }
+  return { events, totalAmount,isLoading, error, refetch: fetchEvents }
 }

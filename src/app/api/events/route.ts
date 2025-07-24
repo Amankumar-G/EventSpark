@@ -13,27 +13,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET!,
 })
 
-/**
- * @swagger
- * /api/events:
- *   post:
- *     summary: Create a new event
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               banner:
- *                 type: string
- *                 format: binary
- *     responses:
- *       201:
- *         description: Event created successfully
- */
 export async function POST(req: NextRequest) {
   try {
     // Connect to database
@@ -126,24 +105,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/**
- * @swagger
- * /api/events:
- *   get:
- *     summary: List events for current user
- *     responses:
- *       200:
- *         description: List of events
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 events:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Event'
- */
 export async function GET(req: NextRequest) {
   try {
     await connect()
@@ -165,7 +126,7 @@ export async function GET(req: NextRequest) {
       events = await Event.find({ isPublic: true, status: 'approved' }).populate('organizer', 'name email').sort({ createdAt: -1 })
     }
 
-    return NextResponse.json({ success: true, events }, { status: 200 })
+    return NextResponse.json({ success: true, events, totalAmount: user.totalAmount, }, { status: 200 })
   } catch (error: unknown) {
   const errorMessage =
     error instanceof Error ? error.message : "An unexpected error occurred";

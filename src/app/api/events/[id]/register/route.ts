@@ -4,6 +4,7 @@ import Event from "@/models/Event";
 import Booking from "@/models/Booking";
 import mongoose from "mongoose";
 import { auth } from "@clerk/nextjs/server";
+import User from "@/models/User";
 
 export async function PUT(
   req: NextRequest,
@@ -88,6 +89,28 @@ export async function PUT(
     // ✅ Increment ticket sold count
     event.ticketTypes[ticketIndex].sold += 1;
     await event.save();
+
+    const platformFee = parseFloat((ticket.price * 0.05).toFixed(2));
+    const totalWithFee = parseFloat((ticket.price * 1.05).toFixed(2));
+    const basePrice = ticket.price;
+
+    await User.findOneAndUpdate(
+      { clerkId: userId },
+      { $inc: { totalAmount: totalWithFee } }
+    );
+
+    const organizerUser = await User.findById(event.organizer);
+
+    if (organizerUser) {
+      await User.findByIdAndUpdate(organizerUser._id, {
+        $inc: { totalAmount: basePrice },
+      });
+    }
+
+    await User.updateOne(
+      { role: "admin" },
+      { $inc: { totalAmount: platformFee } }
+    );
 
     return NextResponse.json({ success: true, booking: newBooking });
   } catch (error: unknown) {

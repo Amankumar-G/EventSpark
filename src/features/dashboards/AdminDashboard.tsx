@@ -69,7 +69,7 @@ export default function AdminDashboard() {
   const [events, setEvents] = useState<EventWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-
+  const [totalEarnings, setTotalEarnings] = useState(0);
   const fetchEvents = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -77,6 +77,7 @@ export default function AdminDashboard() {
       // Replace with your actual API endpoint for fetching all events
       const response = await axios.get("/api/events");
       setEvents(response.data.events);
+      setTotalEarnings(response.data.totalAmount);
     } catch (err) {
       console.error("Error fetching events:", err);
       setError(err as Error);
@@ -103,16 +104,7 @@ export default function AdminDashboard() {
       event.ticketTypes.reduce((tSum, ticket) => tSum + (ticket.sold || 0), 0),
     0
   );
-  const totalEarnings = events.reduce(
-    (sum, event) =>
-      sum +
-      event.ticketTypes.reduce(
-        (tSum, ticket) => tSum + (ticket.sold || 0) * ticket.price,
-        0
-      ),
-    0
-  );
-
+ 
   const summaryCards = [
     {
       title: "Active Events",
